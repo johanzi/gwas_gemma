@@ -30,7 +30,7 @@ assoc2qqman="${current_path}/assoc2qqman.py"
 # Help command if no arguments or -h argument is given 
 if [ "$1" == "-h" -o "$#" -eq 0 ] ; then
 	echo -e "\n" 
-	echo "Usage: `basename $0` <phenotype_file.tsv> <vcf_file.vcf> <model> [-h]"
+	echo "Usage: `basename $0` <phenotype_file.tsv> <vcf_file.vcf> [-h]"
 	echo -e "\n" 
 	echo "Description: Provide as main argument a phenotype file" 
 	echo "generated in R (should have a .tsv extension) and a vcf files containing "
@@ -64,8 +64,8 @@ vcf_file=$2
 if [ ! -e $vcf_file ]; then
 	echo "File $vcf_file does not exist"
      	exit 0
-elif [[ $vcf_file != *.vcf ]]; then
-	echo "Provide a vcf file with .vcf extension"
+elif [[ $vcf_file != *.vcf ]] && [[ $vcf_file != *.vcf.gz ]]; then
+	echo "Provide a vcf file with .vcf or vcf.gz extension"
 	exit 0
 fi
 
@@ -77,11 +77,15 @@ dir_file=$(dirname $phenotype_file)
 
 # VCF into bed file => make .ped and .map files
 # Check if plink files already exist
+# Also check if input vcf file is compressed or not
 if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
 	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
 else
-	echo "vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}" 
-	vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix} 
+	if [[ $vcf_file == *.vcf ]]; then
+		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix} 
+	elif [[ $vcf_file == *.vcf.gz ]]; then
+		vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix} 
+	fi
 fi
 
 # Make bed files: 3 files are created => .bed, .bim, .fam
