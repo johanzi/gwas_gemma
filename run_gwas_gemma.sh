@@ -84,15 +84,15 @@ prefix_gwas=$(basename -s .tsv $phenotype_file)
 
 echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
 
-echo -e "Generated ped, fam, and map files\n"
+echo -e "Generate ped and map files\n"
 
-# VCF into bed file => make .ped, .fam and .map files
+# VCF into bed file => make .ped and .map files
 # These files must be made only once, then only the fam file should be modified for the 
 # tested phenotype
 # Check if plink files already exist
 # Also check if input vcf file is compressed or not
 
-if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ] && [ -e ${dir_file}/${prefix}.map ]; then
+if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
 	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
 else
 	if [[ $vcf_file == *.vcf ]]; then
@@ -104,9 +104,12 @@ else
 	fi
 fi
 
-echo -e "Generated bed, bim, and fam files\n"
+echo -e "Generate bed, bim, and fam files\n"
 # Make bed files: 3 files are created => .bed, .bim, .fam
-p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
+if [ -e ${dir_file}/${prefix}.bed ] && [ -e ${dir_file}/${prefix}.bim ] && [ -e ${dir_file}/${prefix}.fam ]; then
+	p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
+	printf "p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
+fi
 
 echo -e "Paste phenotype data to fam file and reformat it\n"
 # Paste to fam file
