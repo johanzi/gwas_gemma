@@ -1,0 +1,28 @@
+##
+## GEMMA Version = 0.94
+##
+## Command Line Input = -bfile Area_nucleus -k ./output/Area_nucleus.cXX.txt -lmm 2 -o Area_nucleus 
+##
+## Summary Statistics:
+## number of total individuals = 76
+## number of analyzed individuals = 76
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs = 560916
+## number of analyzed SNPs = 41963
+## REMLE log-likelihood in the null model = -291.469
+## MLE log-likelihood in the null model = -294.852
+## pve estimate in the null model = 5.20756e-06
+## se(pve) in the null model = nan
+## vg estimate in the null model = 0.00139022
+## ve estimate in the null model = 139.022
+## beta estimate in the null model =   68.6826
+## se(beta) =   1.35249
+##
+## Computation Time:
+## total computation time = 0.126167 min 
+## computation time break down: 
+##      time on eigen-decomposition = 0 min 
+##      time on calculating UtX = 0.0015 min 
+##      time on optimization = 0.0805 min 
+##

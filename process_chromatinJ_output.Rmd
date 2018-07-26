@@ -1,0 +1,112 @@
+---
+title: "Process chromatinJ output"
+author: "Johan Zicola"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(message=TRUE, warning=FALSE)
+```
+
+```{r echo=FALSE}
+
+# List of packages required for this analysis
+pkg <- c("qqman", "ggplot2")
+
+# Check if packages are not installed and assign the
+# names of the packages not installed to the variable new.pkg
+new.pkg <- pkg[!(pkg %in% installed.packages())]
+
+# If there are any packages in the list that aren't installed,
+# install them
+if (length(new.pkg)) {
+  install.packages(new.pkg, repos = "http://cran.rstudio.com")
+}
+
+#Library to plot Manhattan plots
+library(qqman)
+library(ggplot2)
+
+source("fun_nucleus.R")
+
+```
+
+## User input
+
+```{r}
+# Path to the directory containing ChromatinJ output files
+dir_nuclei <- "T:/dep_coupland/grp_hancock/Microscopy_data/results/GWAS/"
+
+# Path to directory to receive output file
+dir_gwas <- "T:/dep_coupland/grp_hancock/johan/GWAS/"
+
+# Name of the file to export
+name_file <- "test_export_df.txt"
+
+# Path to file containing the order of the accessions as in the VCF file
+# Get order of the accessions from the fam file (in bash, do "cat file.fam | cut -d' ' -f1 > order_accession.txt"")
+# The file should not have headers
+accession_order <- "T:/dep_coupland/grp_hancock/johan/GWAS/order_accession.txt"
+
+```
+
+
+## Generate df with all phenotypes
+
+```{r}
+
+# Create big list
+nuclei <- import.large.list(dir_nuclei, pattern = "results")
+
+# Make a dataframe out of all sublists
+df_all_nuclei <- get.df(nuclei, "name")
+
+# Import names and tg_ecotypeid
+accession_names <- paste(dir_gwas, "name_code_accessions.txt", sep="")
+
+# Import sequencing tg_ecotypeid and accession names
+df_name <- read.delim(accession_names, sep="\t", header = TRUE)
+
+# Recode as factor tg_ecotypeid (which is a integer)
+df_name$tg_ecotypeid <- as.factor(df_name$tg_ecotypeid)
+
+# Merge df_all_nuclei and df_name to have the tg_ecotypeid
+df_all_nuclei <- merge.data.frame(df_all_nuclei, df_name, by="Accession")
+
+# Reset factor variable to new levels 
+df_all_nuclei$Accession <- droplevels(df_all_nuclei$Accession)
+df_all_nuclei$tg_ecotypeid <- droplevels(df_all_nuclei$tg_ecotypeid)
+
+# Create a summary of the nuclear parameters for each accessions
+df_gwas <- summarize.nuclei(df_all_nuclei)
+
+# Upload accession_order file (user input)
+df_order <- read.delim(accession_order, sep="\t", header = FALSE)
+
+# Name the column "tg_ecotypeid" to allow the dataframe merging
+names(df_order)[1] <- "tg_ecotypeid"
+
+#Allow to keep the proper order (sort=F)
+df_gwas <- merge.data.frame(df_order, df_gwas, by="tg_ecotypeid", sort=F)
+
+```
+
+## Export the dataframe as a tab-separated file in specified directory (user input)
+
+```{r}
+path_file <- paste(dir_gwas, name_file, sep="")
+
+write.table(df_gwas, row.names = FALSE, col.names = TRUE, quote = FALSE, file = path_file, sep = "\t")
+```
+
+
+
+
+
+
+
+
+
+
+

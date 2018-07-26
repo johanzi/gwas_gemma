@@ -1,0 +1,101 @@
+---
+title: "Gemma analysis"
+author: "Johan Zicola"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=TRUE, warning=FALSE)
+```
+
+```{r}
+
+# List of packages required for this analysis
+pkg <- c("qqman", "ggplot2")
+
+# Check if packages are not installed and assign the
+# names of the packages not installed to the variable new.pkg
+new.pkg <- pkg[!(pkg %in% installed.packages())]
+
+# If there are any packages in the list that aren't installed,
+# install them
+if (length(new.pkg)) {
+  install.packages(new.pkg, repos = "http://cran.rstudio.com")
+}
+
+
+#Library to plot Manhattan plots
+library(qqman)
+
+library(ggplot2)
+
+
+```
+
+
+
+###Load output from Gemma
+```{r}
+
+dir_file <- "T:/dep_coupland/grp_hancock/johan/GWAS/output/"
+
+file.name <- "Area_nucleus.assoc.clean.txt"
+
+path.file <- paste(dir_file, file.name, sep="")
+
+gwas.results <- read.delim(path.file, sep="\t")
+
+
+```
+
+###QQ plot of the p-values
+```{r echo=FALSE}
+qq(gwas.results$P, main=file.name)
+```
+
+
+```{r echo=FALSE}
+plot(-log(gwas.results$P)~gwas.results$CHR, main=file.name)
+```
+```{r echo=FALSE}
+hist(-log(gwas.results$P), main=file.name)
+```
+
+
+### Number of SNP per chromosome
+```{r echo=FALSE}
+as.data.frame(table(gwas.results$CHR))
+```
+
+
+
+```{r echo=FALSE}
+
+# Get positions of the chromosome with SNPs having a -log(P) > 5
+
+threshold <-  (10^-5)
+
+gwas_significant <- subset(gwas.results, P < threshold)
+
+# Get a vector of the SNPs with significant value
+SNP_significant <- as.vector(gwas_significant$SNP)
+
+```
+
+
+
+### Manhattan plot
+
+```{r echo=FALSE}
+manhattan(gwas.results, highlight=SNP_significant, main=file.name)
+```
+
+```{r echo=FALSE}
+#Check if dataframe is not empty (no SNPs above threshold value
+if(dim(gwas_significant)[[1]] != 0){ 
+  gwas_significant
+}
+
+```
+
