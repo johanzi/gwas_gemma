@@ -76,7 +76,13 @@ prefix=$(basename -s .tsv $phenotype_file)
 dir_file=$(dirname $phenotype_file)
 
 # VCF into bed file => make .ped and .map files
-vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix} 
+# Check if plink files already exist
+if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
+	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
+else
+	echo "vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}" 
+	vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix} 
+fi
 
 # Make bed files: 3 files are created => .bed, .bim, .fam
 p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
@@ -155,9 +161,4 @@ echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix}.txt
 echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix}.txt
 echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix}.txt
 echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix}.txt
-
-
-
-
-
 
