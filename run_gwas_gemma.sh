@@ -72,13 +72,23 @@ fi
 ##################################################################################
 
 # Get prefix from phenotype name (assume the phenotype file has a .tsv extension)
-prefix=$(basename -s .tsv $phenotype_file)
 dir_file=$(dirname $phenotype_file)
 
-# VCF into bed file => make .ped and .map files
+# Prefix. Per default will be name of the VCF file before the first point
+prefix=$(echo $vcf_file | cut -d'.' -f1)
+
+
+# Prefix for GWAS results
+prefix_gwas=$(basename -s .tsv $phenotype_file)
+
+
+# VCF into bed file => make .ped, .fam and .map files
+# These files must be made only once, then only the fam file should be modified for the 
+# tested phenotype
 # Check if plink files already exist
 # Also check if input vcf file is compressed or not
-if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
+
+if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ] && [ -e ${dir_file}/${prefix}.map ]; then
 	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
 else
 	if [[ $vcf_file == *.vcf ]]; then
@@ -114,7 +124,7 @@ mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam
 # centered matrix preferred in general, accounts better for population structure
 # If standardized genotype matrix is needed, change to -gk 2 (sXX)
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
-gemma -bfile ${dir_file}/${prefix} -gk 1 -o ${prefix}
+gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
 
 
 ## If needed, the relatedness matrix can transformed into eigen values and eigen vectors
@@ -126,7 +136,7 @@ gemma -bfile ${dir_file}/${prefix} -gk 1 -o ${prefix}
 # Use lmm 2 to performs likelihood ratio test
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
-gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix}.cXX.txt -lmm 2 -o ${prefix}
+gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
 
 # # Association Tests with Multivariate Linear Mixed Models
 # # several phenotypes can be given (for instance columns 1,2,3 of the phenotype file). Less than 10
@@ -145,7 +155,7 @@ gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix}.cXX.txt -
 
 
 # Polish file for R
-python $assoc2qqman ${current_path}/output/${prefix}.assoc.txt > ${current_path}/output/${prefix}.assoc.clean.txt
+python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt
 
 
 # Move the output data into dir_file
@@ -161,8 +171,8 @@ mv ${current_path}/output/* ${dir_file}/output/
 rm -r ${current_path}/output
 
 # Create a log output file
-echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix}.txt
-echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix}.txt
-echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix}.txt
-echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix}.txt
+echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
+echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
+echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
+echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 
