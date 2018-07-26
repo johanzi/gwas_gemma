@@ -84,7 +84,6 @@ prefix_gwas=$(basename -s .tsv $phenotype_file)
 
 echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
 
-echo -e "Generate ped and map files\n"
 
 # VCF into bed file => make .ped and .map files
 # These files must be made only once, then only the fam file should be modified for the 
@@ -92,40 +91,45 @@ echo -e "Generate ped and map files\n"
 # Check if plink files already exist
 # Also check if input vcf file is compressed or not
 
+echo -e "Generate ped and map files\n"
 if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
-	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
+	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists. Go to next step\n"
 else
 	if [[ $vcf_file == *.vcf ]]; then
-		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}
 		printf "vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
+		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}
 	elif [[ $vcf_file == *.vcf.gz ]]; then
-		vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix} 
 		printf "vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
+		vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix} 
 	fi
 fi
 
-echo -e "Generate bed, bim, and fam files\n"
+echo -e "\nGenerate bed, bim, and fam files\n"
 # Make bed files: 3 files are created => .bed, .bim, .fam
 if [ -e ${dir_file}/${prefix}.bed ] && [ -e ${dir_file}/${prefix}.bim ] && [ -e ${dir_file}/${prefix}.fam ]; then
-	echo "File ${dir_file}/${prefix}.bed, ${dir_file}/${prefix}.bim, ${dir_file}/${prefix}.fam already exist.\n Skip this step."
+	echo "File ${dir_file}/${prefix}.bed, ${dir_file}/${prefix}.bim, ${dir_file}/${prefix}.fam already exist. Go to next step."
 else
+	printf "plink --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
 	plink --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
-	printf "plink --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
 fi
 
-echo -e "Paste phenotype data to fam file and reformat it\n"
+echo -e "\nPaste phenotype data to fam file and reformat it\n"
 # Paste to fam file
+echo "paste -d ' ' ${dir_file}/${prefix}.fam $phenotype_file > ${dir_file}/${prefix}_modified.fam"
 paste -d ' ' ${dir_file}/${prefix}.fam $phenotype_file > ${dir_file}/${prefix}_modified.fam
 
 # Remove 6th column (-9)
+echo "awk '!($6="")' ${dir_file}/${prefix}_modified.fam  > ${dir_file}/${prefix}_modified1.fam"
 awk '!($6="")' ${dir_file}/${prefix}_modified.fam  > ${dir_file}/${prefix}_modified1.fam
 
 # Remove double spaces
+echo "sed -i 's/  / /g' ${dir_file}/${prefix}_modified1.fam"
 sed -i 's/  / /g' ${dir_file}/${prefix}_modified1.fam 
 
+echo "mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam"
 mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam
 
-echo -e "###################### RUN GEMMA #######################\n"
+echo -e "\n###################### RUN GEMMA #######################\n"
 # Run Gemma
 # Per default, gemma put the results in an "output" directory located in working directory ($current_path)
 # There is apparently no way to change this (adding fullpath in -o  /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/rDNA_copy_number_MOR)
@@ -133,15 +137,19 @@ echo -e "###################### RUN GEMMA #######################\n"
 # error writing file: ./output//srv/biodata/dep_coupland/grp_hancock/johan/GWAS/rDNA_copy_number_MOR.cXX.txt
 # Instead, just transfer the generated files into the ${dir_file}/output directory at the end
 
-## Estimate relatedness matrix from genotypes (n x n individuals)
+# Estimate relatedness matrix from genotypes (n x n individuals)
 # Generate relatedness matrix based on centered genotypes (cXX)
 # centered matrix preferred in general, accounts better for population structure
 # If standardized genotype matrix is needed, change to -gk 2 (sXX)
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
 
-echo "gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas"
-gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
-
+echo -e "Generate relatedness matrix\n"
+if [ -e ${current_path}/output/${prefix}.cXX.txt ]; then
+	echo -e "${current_path}/output/${prefix_gwas}.cXX.txt file already exists. Go to next step"
+else
+	echo -e "\ngemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas \n"
+	gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
+fi
 
 ## If needed, the relatedness matrix can transformed into eigen values and eigen vectors
 ## Generates 3 files: log, eigen values (1 column of na elements) and eigen vectors  (na x na matrix)
@@ -153,8 +161,13 @@ gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
 
-echo "gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}"
-gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
+echo -e "Perform the association test\n"
+if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
+	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
+else
+	echo -e "\ngemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
+	gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
+fi
 
 # # Association Tests with Multivariate Linear Mixed Models
 # # several phenotypes can be given (for instance columns 1,2,3 of the phenotype file). Less than 10
@@ -173,23 +186,21 @@ gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.
 
 
 # Polish file for R
-echo "Reformat assoc.txt file to be compatible with manhattan library in R"
+echo -e "\nReformat assoc.txt file to be compatible with manhattan library in R\n"
 
 echo "python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt"
 python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt
 
-
 # Move the output data into dir_file
 
-# Check if output directory is present in dir_file
+# Check if output directory is present in dir_file (case when script is $dir_file == $current_path
+# If not, create it and move output/ in it
 if [ ! -d  ${dir_file}/output ]; then
-    mkdir ${dir_file}/output
+	mkdir ${dir_file}/output
+	mv ${current_path}/output/* ${dir_file}/output/
+	rm -r ${current_path}/output
 fi
 
-mv ${current_path}/output/* ${dir_file}/output/
-
-# Delete output directory in current_dir
-rm -r ${current_path}/output
 
 # Create a log output file
 echo "Log generated as log_gwas_${prefix_gwas}.txt"
