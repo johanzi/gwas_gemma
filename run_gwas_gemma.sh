@@ -82,6 +82,10 @@ prefix=$(echo $vcf_file | cut -d'.' -f1)
 prefix_gwas=$(basename -s .tsv $phenotype_file)
 
 
+echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
+
+echo -e "Generated ped, fam, and map files\n"
+
 # VCF into bed file => make .ped, .fam and .map files
 # These files must be made only once, then only the fam file should be modified for the 
 # tested phenotype
@@ -92,15 +96,19 @@ if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ] && [ -e 
 	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists.\nSkip vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}"
 else
 	if [[ $vcf_file == *.vcf ]]; then
-		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix} 
+		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}
+		printf "vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
 	elif [[ $vcf_file == *.vcf.gz ]]; then
 		vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix} 
+		printf "vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
 	fi
 fi
 
+echo -e "Generated bed, bim, and fam files\n"
 # Make bed files: 3 files are created => .bed, .bim, .fam
 p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
 
+echo -e "Paste phenotype data to fam file and reformat it\n"
 # Paste to fam file
 paste -d ' ' ${dir_file}/${prefix}.fam $phenotype_file > ${dir_file}/${prefix}_modified.fam
 
@@ -112,6 +120,7 @@ sed -i 's/  / /g' ${dir_file}/${prefix}_modified1.fam
 
 mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam
 
+echo -e "###################### RUN GEMMA #######################\n"
 # Run Gemma
 # Per default, gemma put the results in an "output" directory located in working directory ($current_path)
 # There is apparently no way to change this (adding fullpath in -o  /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/rDNA_copy_number_MOR)
@@ -124,6 +133,8 @@ mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam
 # centered matrix preferred in general, accounts better for population structure
 # If standardized genotype matrix is needed, change to -gk 2 (sXX)
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
+
+echo "gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas"
 gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
 
 
@@ -136,6 +147,8 @@ gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
 # Use lmm 2 to performs likelihood ratio test
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
+
+echo "gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}"
 gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
 
 # # Association Tests with Multivariate Linear Mixed Models
@@ -155,6 +168,9 @@ gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.
 
 
 # Polish file for R
+echo "Reformat assoc.txt file to be compatible with manhattan library in R"
+
+echo "python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt"
 python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt
 
 
@@ -171,6 +187,7 @@ mv ${current_path}/output/* ${dir_file}/output/
 rm -r ${current_path}/output
 
 # Create a log output file
+echo "Log generated as log_gwas_${prefix_gwas}.txt"
 echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
