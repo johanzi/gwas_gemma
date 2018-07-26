@@ -107,8 +107,10 @@ fi
 echo -e "Generate bed, bim, and fam files\n"
 # Make bed files: 3 files are created => .bed, .bim, .fam
 if [ -e ${dir_file}/${prefix}.bed ] && [ -e ${dir_file}/${prefix}.bim ] && [ -e ${dir_file}/${prefix}.fam ]; then
-	p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
-	printf "p-link --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
+	echo "File ${dir_file}/${prefix}.bed, ${dir_file}/${prefix}.bim, ${dir_file}/${prefix}.fam already exist.\n Skip this step."
+else
+	plink --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
+	printf "plink --noweb --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
 fi
 
 echo -e "Paste phenotype data to fam file and reformat it\n"
