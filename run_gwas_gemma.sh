@@ -17,12 +17,16 @@
 # Path to python script assoc2qqman.py (assumes the script is in the same
 # directory as this script)
 
-# Get directory of running bash script
-current_path=$(dirname $0)
-current_path=$(cd $current_path && pwd)
+# Note that gemma output files will be made in the directory
+# in which the user launches the script (not forcibly the directory containing the script or the input files)
+# We call this directory $current_path
+current_path=$(pwd)
 
+# Get directory of running bash script to identify where the python script assoc2qqman.py is 
+path_script=$(dirname $0)
+path_script=$(cd $path_script && pwd)
 # Assign path of the python script assoc2qqman.py to $assoc2qqman
-assoc2qqman="${current_path}/assoc2qqman.py"
+assoc2qqman="${path_script}/assoc2qqman.py"
 
 
 ####################################################################################
@@ -71,22 +75,18 @@ fi
 
 ##################################################################################
 
-# Get prefix from phenotype name (assume the phenotype file has a .tsv extension)
+# Directory containing the phenotype file and which will contain final GWAS results
+# in the output/ directory
+# Get prefix of phenotype file
 dir_file=$(dirname $phenotype_file)
-dir_file=$(cd $dir_file && pwd)
 
-
-# Prefix. Per default will be name of the VCF file before the first point
-prefix=$(echo $vcf_file | cut -d'.' -f1)
-
-
-# Prefix for GWAS results
+# Get prefix from phenotype name (assume the phenotype file has a .tsv extension)
+# Prefix for GWAS results. Based on phenotype file name
 prefix_gwas=$(basename -s .tsv $phenotype_file)
 
-echo "$current_path"
-echo "$dir_file"
-
-exit 0
+# Prefix to generate plink files from input VCF file
+# Per default will be name of the VCF file before the first point
+prefix_vcf=$(echo $vcf_file | cut -d'.' -f1)
 
 
 echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
@@ -99,42 +99,42 @@ echo -e "###################### CONVERT VCF TO PLINK FORMAT ####################
 # Also check if input vcf file is compressed or not
 
 echo -e "Generate ped and map files\n"
-if [ -e ${dir_file}/${prefix}.ped ] && [ -e ${dir_file}/${prefix}.map ]; then
-	echo -e i"${dir_file}/${prefix}.ped and ${dir_file}/${prefix}.map already exists. Go to next step\n"
+if [ -e ${prefix_vcf}.ped ] && [ -e ${prefix_vcf}.map ]; then
+	echo -e i"${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step\n"
 else
 	if [[ $vcf_file == *.vcf ]]; then
-		printf "vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
-		vcftools --vcf $vcf_file --plink --out ${dir_file}/${prefix}
+		printf "vcftools --vcf $vcf_file --plink --out ${prefix_vcf}\n"
+		vcftools --vcf $vcf_file --plink --out ${prefix_vcf}
 	elif [[ $vcf_file == *.vcf.gz ]]; then
-		printf "vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix}\n"
-		vcftools --gzvcf $vcf_file --plink --out ${dir_file}/${prefix} 
+		printf "vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf}\n"
+		vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf} 
 	fi
 fi
 
 echo -e "\nGenerate bed, bim, and fam files\n"
 # Make bed files: 3 files are created => .bed, .bim, .fam
-if [ -e ${dir_file}/${prefix}.bed ] && [ -e ${dir_file}/${prefix}.bim ] && [ -e ${dir_file}/${prefix}.fam ]; then
-	echo "File ${dir_file}/${prefix}.bed, ${dir_file}/${prefix}.bim, ${dir_file}/${prefix}.fam already exist. Go to next step."
+if [ -e ${prefix_vcf}.bed ] && [ -e ${prefix_vcf}.bim ] && [ -e ${prefix_vcf}.fam ]; then
+	echo "File ${prefix_vcf}.bed, ${prefix_vcf}.bim, ${prefix_vcf}.fam already exist. Go to next step."
 else
-	printf "plink --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}\n" 
-	plink --file ${dir_file}/${prefix} --make-bed --out ${dir_file}/${prefix}  
+	printf "plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}\n" 
+	plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}  
 fi
 
 echo -e "\nPaste phenotype data to fam file and reformat it\n"
 # Paste to fam file
-echo "paste -d ' ' ${dir_file}/${prefix}.fam $phenotype_file > ${dir_file}/${prefix}_modified.fam"
-paste -d ' ' ${dir_file}/${prefix}.fam $phenotype_file > ${dir_file}/${prefix}_modified.fam
+echo "paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam"
+paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam
 
 # Remove 6th column (-9)
-echo "awk '!($6="")' ${dir_file}/${prefix}_modified.fam  > ${dir_file}/${prefix}_modified1.fam"
-awk '!($6="")' ${dir_file}/${prefix}_modified.fam  > ${dir_file}/${prefix}_modified1.fam
+echo "awk '!($6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam"
+awk '!($6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam
 
 # Remove double spaces
-echo "sed -i 's/  / /g' ${dir_file}/${prefix}_modified1.fam"
-sed -i 's/  / /g' ${dir_file}/${prefix}_modified1.fam 
+echo "sed -i 's/  / /g' ${prefix_vcf}_modified1.fam"
+sed -i 's/  / /g' ${prefix_vcf}_modified1.fam 
 
-echo "mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam"
-mv ${dir_file}/${prefix}_modified1.fam ${dir_file}/${prefix}.fam
+echo "mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam"
+mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam
 
 echo -e "\n###################### RUN GEMMA #######################\n"
 # Run Gemma
@@ -151,17 +151,17 @@ echo -e "\n###################### RUN GEMMA #######################\n"
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
 
 echo -e "Generate relatedness matrix\n"
-if [ -e ${current_path}/output/${prefix}.cXX.txt ]; then
+if [ -e ${current_path}/output/${prefix_gwas}.cXX.txt ]; then
 	echo -e "${current_path}/output/${prefix_gwas}.cXX.txt file already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas \n"
-	gemma -bfile ${dir_file}/${prefix} -gk 1 -o $prefix_gwas
+	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o $prefix_gwas \n"
+	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_gwas
 fi
 
 ## If needed, the relatedness matrix can transformed into eigen values and eigen vectors
 ## Generates 3 files: log, eigen values (1 column of na elements) and eigen vectors  (na x na matrix)
 ## Use of eigen transformation allows quicker analysis (if samples > 10 000)
-# gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix}.cXX.txt -eigen -o ${prefix}
+# gemma -bfile ${prefix} -k ${current_path}/output/${prefix}.cXX.txt -eigen -o ${prefix}
 
 ## Association Tests with Univariate Linear Mixed Models
 # Use lmm 2 to performs likelihood ratio test
@@ -172,25 +172,27 @@ echo -e "Perform the association test\n"
 if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
-	gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
+	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
+	gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
 fi
 
 # # Association Tests with Multivariate Linear Mixed Models
 # # several phenotypes can be given (for instance columns 1,2,3 of the phenotype file). Less than 10
 # # phenotypes are recommended
-# gemma -bfile ${dir_file}/${prefix} -k ${current_path}/output/${prefix}.cXX.txt -lmm 2 -n 1 2 3 -o ${prefix}
+# gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix}.cXX.txt -lmm 2 -n 1 2 3 -o ${prefix}
 
 ## Bayesian Sparse Linear Mixed Model
 ## Use a standard linear BSLMM (-bslmm 1)
 ## Does not require a relatedness matrix (calculates it internally)
 ## Generates 5 output files: log, hyp.txt (estimated hyper-parameters), param.txt (posterior mean 
 ## estimates for the effect size parameters), prefix.bv contains 
-# gemma -bfile ${dir_file}/${prefix} -bslmm 1 -o ${prefix}
+# gemma -bfile ${prefix_vcf} -bslmm 1 -o ${prefix}
 
 # To analyze the output of bslmm in R, one needs to plot the gamma value multiplied by beta value from the # param.txt (see more details on https://visoca.github.io/popgenomworkshop-gwas_gemma/)
 # see R script gemma_param.R
 
+
+ echo -e "\n###################### POLISHING GEMMA OUTPUT #######################\n"
 
 # Polish file for R
 echo -e "\nReformat assoc.txt file to be compatible with manhattan library in R\n"
@@ -200,19 +202,27 @@ python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_
 
 # Move the output data into dir_file
 
-# Check if output directory is present in dir_file (case when script is $dir_file == $current_path
+# Check if output directory is present in dir_file (case when script is $dir_file == $path_script
 # If not, create it and move output/ in it
+
+echo -e "\nMove output files from  ${current_path}/output/ to ${dir_file}/output/ \n"
+
 if [ ! -d  ${dir_file}/output ]; then
+	echo "mkdir ${dir_file}/output"
 	mkdir ${dir_file}/output
-	mv ${current_path}/output/* ${dir_file}/output/
-	rm -r ${current_path}/output
 fi
 
+# Transfer output files
+echo "mv ${current_path}/output/* ${dir_file}/output/"
+mv ${current_path}/output/* ${dir_file}/output/
+echo "rm -r ${current_path}/output"
+rm -r ${current_path}/output
 
 # Create a log output file
-echo "Log generated as log_gwas_${prefix_gwas}.txt"
+echo -e "\nLog generated as log_gwas_${prefix_gwas}.txt"
 echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
+
 
