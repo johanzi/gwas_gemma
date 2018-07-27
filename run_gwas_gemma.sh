@@ -78,7 +78,7 @@ fi
 # Directory containing the phenotype file and which will contain final GWAS results
 # in the output/ directory
 # Get prefix of phenotype file
-dir_file=$(dirname $phenotype_file)
+dir_file=$(pwd $phenotype_file)
 
 # Get prefix from phenotype name (assume the phenotype file has a .tsv extension)
 # Prefix for GWAS results. Based on phenotype file name
@@ -89,7 +89,16 @@ prefix_gwas=$(basename -s .tsv $phenotype_file)
 prefix_vcf=$(echo $vcf_file | cut -d'.' -f1)
 
 
-echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
+echo -e "\n###################### INPUT VARIABLES ###################################\n"
+
+echo "phenotype file: $phenotype_file"
+echo "vcf file: $vcf_file"
+echo "dir_file (directory where output/ will be): $dir_file"
+echo "current_path: $current_path"
+echo "prefix plink output files: $prefix_vcf"
+echo "prefix gemma output files: $prefix_gwas"
+
+echo -e "\n###################### CONVERT VCF TO PLINK FORMAT #######################\n"
 
 
 # VCF into bed file => make .ped and .map files
@@ -100,7 +109,7 @@ echo -e "###################### CONVERT VCF TO PLINK FORMAT ####################
 
 echo -e "Generate ped and map files\n"
 if [ -e ${prefix_vcf}.ped ] && [ -e ${prefix_vcf}.map ]; then
-	echo -e i"${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step\n"
+	echo -e "${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step\n"
 else
 	if [[ $vcf_file == *.vcf ]]; then
 		printf "vcftools --vcf $vcf_file --plink --out ${prefix_vcf}\n"
@@ -136,7 +145,7 @@ sed -i 's/  / /g' ${prefix_vcf}_modified1.fam
 echo "mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam"
 mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam
 
-echo -e "\n###################### RUN GEMMA #######################\n"
+echo -e "\n############################# RUN GEMMA ##################################\n"
 # Run Gemma
 # Per default, gemma put the results in an "output" directory located in working directory ($current_path)
 # There is apparently no way to change this (adding fullpath in -o  /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/rDNA_copy_number_MOR)
@@ -192,10 +201,10 @@ fi
 # see R script gemma_param.R
 
 
- echo -e "\n###################### POLISHING GEMMA OUTPUT #######################\n"
+ echo -e "\n########################## POLISHING GEMMA OUTPUT ############################\n"
 
 # Polish file for R
-echo -e "\nReformat assoc.txt file to be compatible with manhattan library in R\n"
+echo -e "Reformat assoc.txt file to be compatible with manhattan library in R\n"
 
 echo "python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt"
 python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt
@@ -205,18 +214,16 @@ python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_
 # Check if output directory is present in dir_file (case when script is $dir_file == $path_script
 # If not, create it and move output/ in it
 
-echo -e "\nMove output files from  ${current_path}/output/ to ${dir_file}/output/ \n"
-
-if [ ! -d  ${dir_file}/output ]; then
+# Transfer output files if necessary (in case $current_path != $dir_path
+if [[ $current_path != $dir_file ]]; then
+	echo "Transfer output files in ${dir_file}/output"
 	echo "mkdir ${dir_file}/output"
 	mkdir ${dir_file}/output
+	echo "mv ${current_path}/output/* ${dir_file}/output/"
+	mv ${current_path}/output/* ${dir_file}/output/
+	echo "rm -r ${current_path}/output"
+	rm -r ${current_path}/output
 fi
-
-# Transfer output files
-echo "mv ${current_path}/output/* ${dir_file}/output/"
-mv ${current_path}/output/* ${dir_file}/output/
-echo "rm -r ${current_path}/output"
-rm -r ${current_path}/output
 
 # Create a log output file
 echo -e "\nLog generated as log_gwas_${prefix_gwas}.txt"
