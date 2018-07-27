@@ -73,6 +73,8 @@ fi
 
 # Get prefix from phenotype name (assume the phenotype file has a .tsv extension)
 dir_file=$(dirname $phenotype_file)
+dir_file=$(cd $dir_file && pwd)
+
 
 # Prefix. Per default will be name of the VCF file before the first point
 prefix=$(echo $vcf_file | cut -d'.' -f1)
@@ -80,6 +82,11 @@ prefix=$(echo $vcf_file | cut -d'.' -f1)
 
 # Prefix for GWAS results
 prefix_gwas=$(basename -s .tsv $phenotype_file)
+
+echo "$current_path"
+echo "$dir_file"
+
+exit 0
 
 
 echo -e "###################### CONVERT VCF TO PLINK FORMAT #######################\n"
