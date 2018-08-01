@@ -28,7 +28,13 @@ path_script=$(cd $path_script && pwd)
 # Assign path of the python script assoc2qqman.py to $assoc2qqman
 assoc2qqman="${path_script}/assoc2qqman.py"
 
-
+# Softwares required:
+#	python2.7
+#	gemma 0.94 (tested)
+#	vcftools 0.1.14 (tested)
+#	bcftools 1.2 (tested)
+#	PLINK v1.90b3.40 (tested)
+#
 ####################################################################################
 
 # Help command if no arguments or -h argument is given 
