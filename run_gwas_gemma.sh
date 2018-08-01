@@ -158,13 +158,15 @@ echo -e "\n############################# RUN GEMMA #############################
 # centered matrix preferred in general, accounts better for population structure
 # If standardized genotype matrix is needed, change to -gk 2 (sXX)
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
+# Not that this file remains the same whatever phenotype is studied as it considers 
+# only the VCF file.
 
 echo -e "Generate relatedness matrix\n"
-if [ -e ${current_path}/output/${prefix_gwas}.cXX.txt ]; then
-	echo -e "${current_path}/output/${prefix_gwas}.cXX.txt file already exists. Go to next step"
+if [ -e ${current_path}/output/${prefix_vcf}.cXX.txt ]; then
+	echo -e "${current_path}/output/${prefix_vcf}.cXX.txt file already exists. Go to next step"
 else
 	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o $prefix_gwas \n"
-	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_gwas
+	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_vcf
 fi
 
 ## If needed, the relatedness matrix can transformed into eigen values and eigen vectors
