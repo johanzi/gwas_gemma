@@ -171,7 +171,7 @@ echo -e "Generate relatedness matrix\n"
 if [ -e ${current_path}/output/${prefix_vcf}.cXX.txt ]; then
 	echo -e "${current_path}/output/${prefix_vcf}.cXX.txt file already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o $prefix_gwas \n"
+	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o ${prefix_vcf} \n"
 	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_vcf
 fi
 
@@ -189,8 +189,8 @@ echo -e "Perform the association test\n"
 if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
-	gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_gwas}.cXX.txt -lmm 2 -o ${prefix_gwas}
+	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
+	gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
 fi
 
 # # Association Tests with Multivariate Linear Mixed Models
