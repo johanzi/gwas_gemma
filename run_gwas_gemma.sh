@@ -113,35 +113,35 @@ echo -e "\n###################### CONVERT VCF TO PLINK FORMAT ##################
 # Check if plink files already exist
 # Also check if input vcf file is compressed or not
 
-echo -e "Generate ped and map files\n"
+echo -e "Generate ped and map files:"
 if [ -e ${prefix_vcf}.ped ] && [ -e ${prefix_vcf}.map ]; then
-	echo -e "${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step\n"
+	echo -e "${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step."
 else
 	if [[ $vcf_file == *.vcf ]]; then
-		printf "vcftools --vcf $vcf_file --plink --out ${prefix_vcf}\n"
+		printf "vcftools --vcf $vcf_file --plink --out ${prefix_vcf}"
 		vcftools --vcf $vcf_file --plink --out ${prefix_vcf}
 	elif [[ $vcf_file == *.vcf.gz ]]; then
-		printf "vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf}\n"
+		printf "vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf}"
 		vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf} 
 	fi
 fi
 
-echo -e "\nGenerate bed, bim, and fam files\n"
+echo -e "\nGenerate bed, bim, and fam files:"
 # Make bed files: 3 files are created => .bed, .bim, .fam
 if [ -e ${prefix_vcf}.bed ] && [ -e ${prefix_vcf}.bim ] && [ -e ${prefix_vcf}.fam ]; then
 	echo "File ${prefix_vcf}.bed, ${prefix_vcf}.bim, ${prefix_vcf}.fam already exist. Go to next step."
 else
-	printf "plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}\n" 
+	printf "plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}" 
 	plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}  
 fi
 
-echo -e "\nPaste phenotype data to fam file and reformat it\n"
+echo -e "\nPaste phenotype data to fam file and reformat it:"
 # Paste to fam file
 echo "paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam"
 paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam
 
 # Remove 6th column (-9)
-echo "awk '!($6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam"
+echo "awk '!(\$6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam"
 awk '!($6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam
 
 # Remove double spaces
@@ -167,15 +167,15 @@ echo -e "\n############################# RUN GEMMA #############################
 # Not that this file remains the same whatever phenotype is studied as it considers 
 # only the VCF file.
 
-echo -e "Generate relatedness matrix\n"
+echo -e "Generate relatedness matrix:"
 if [ -e ${current_path}/output/${prefix_vcf}.cXX.txt ]; then
-	echo -e "${current_path}/output/${prefix_vcf}.cXX.txt file already exists. Go to next step"
+	echo -e "${current_path}/output/${prefix_vcf}.cXX.txt file already exists. Go to next step."
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o ${prefix_vcf} \n"
+	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o ${prefix_vcf}"
 	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_vcf
 fi
 
-## If needed, the relatedness matrix can transformed into eigen values and eigen vectors
+## If needed, the relatedness matrix can be transformed into eigen values and eigen vectors
 ## Generates 3 files: log, eigen values (1 column of na elements) and eigen vectors  (na x na matrix)
 ## Use of eigen transformation allows quicker analysis (if samples > 10 000)
 # gemma -bfile ${prefix} -k ${current_path}/output/${prefix}.cXX.txt -eigen -o ${prefix}
@@ -185,11 +185,12 @@ fi
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
 
-echo -e "Perform the association test\n"
+echo -e "\nPerform the association test:"
+
 if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} \n"
+	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
 	gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
 fi
 
@@ -209,10 +210,10 @@ fi
 # see R script gemma_param.R
 
 
- echo -e "\n########################## POLISHING GEMMA OUTPUT ############################\n"
+echo -e "\n########################## POLISHING GEMMA OUTPUT ############################\n"
 
 # Polish file for R
-echo -e "Reformat assoc.txt file to be compatible with manhattan library in R\n"
+echo -e "Reformat assoc.txt file to be compatible with manhattan library in R:"
 
 echo "python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt"
 python $assoc2qqman ${current_path}/output/${prefix_gwas}.assoc.txt > ${current_path}/output/${prefix_gwas}.assoc.clean.txt
