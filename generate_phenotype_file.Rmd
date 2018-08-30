@@ -38,7 +38,7 @@ if (length(new.pkg)) {
   install.packages(new.pkg, repos = "http://cran.rstudio.com")
 }
 
-#Library to plot Manhattan plots
+# Library to plot Manhattan plots
 
 library(ggplot2)
 
@@ -66,7 +66,7 @@ names(df_gwas)
 ```
 
 
-##Export wanted phenotype
+## Export wanted phenotype
 ```{r}
 # Not that df_gwas$phenotype cannot be used as $ does not take variables
 variable <- df_gwas[,phenotype]
@@ -80,7 +80,7 @@ write.table(variable, row.names = FALSE, col.names = FALSE, quote = FALSE, file 
 ```
 
 
-##Export scaled wanted phenotype
+## Export scaled wanted phenotype
 ```{r}
 #normalize data
 variable_scaled <- scale(variable)
