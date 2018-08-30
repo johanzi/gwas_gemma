@@ -20,8 +20,13 @@ def main():
 
     # Open the file
     input_file = sys.argv[1]
-    input_file = open(input_file, "r")
-    lines_file = input_file.read().splitlines()
+    
+    # Check if input file exists
+    if os.path.isfile(input_file):
+        input_file = open(input_file, "r")
+        lines_file = input_file.read().splitlines()
+    else:
+        sys.exit("Error: input file does not exist")
 
 
     for line in lines_file:
