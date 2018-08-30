@@ -9,9 +9,10 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
 * Unix/Mac OS X environment for manipulation in bash
 * p-link (v1.07)
 * vcftools (v0.1.14)
-* bcftools (v1.9)
+* bcftools (v1.2)
 * gemma (v0.94)
 
+*NB: The versions indicated were the ones used and tested. One can first try already installed versions before installing the recommended version.*
 
 # Files needed
 * VCF file with the accessions/samples
