@@ -79,6 +79,17 @@ elif [[ $vcf_file != *.vcf ]] && [[ $vcf_file != *.vcf.gz ]]; then
 	exit 0
 fi
 
+# Check if phenotype file contains as many lines as there are samples in the VCF file.
+# If not, this will yield in segmentation fault when making the kinship matrix
+
+nb_samples=$(bcftools query -l $vcf_file)
+nb_phenotypes=$(wc -l $phenotype_file)
+if [[ nb_samples != nb_phenotypes ]]; then
+	echo "Number of samples and number of phenotypes are not equal! verify files"
+	exit 0
+fi
+
+
 ##################################################################################
 
 # Directory containing the phenotype file and which will contain final GWAS results
