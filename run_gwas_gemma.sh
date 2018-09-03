@@ -82,9 +82,9 @@ fi
 # Check if phenotype file contains as many lines as there are samples in the VCF file.
 # If not, this will yield in segmentation fault when making the kinship matrix
 
-nb_samples=$(bcftools query -l $vcf_file)
-nb_phenotypes=$(wc -l $phenotype_file)
-if [[ nb_samples != nb_phenotypes ]]; then
+nb_samples=$(bcftools query -l $vcf_file | wc -l)
+nb_phenotypes=$(cat $phenotype_file | wc -l)
+if [[ $nb_samples != $nb_phenotypes ]]; then
 	echo "Number of samples and number of phenotypes are not equal! verify files"
 	exit 0
 fi
