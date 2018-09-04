@@ -29,9 +29,6 @@ generate_phenotype_gemma(){
 	echo "Rscript create_gemma_phenotype.R $accessions_order df_accessions.txt ${name_df}.txt $gemma_file"
 	Rscript ${ABSDIR}/create_gemma_phenotype.R $accessions_order df_accessions.txt ${name_df}.txt $gemma_file
 	
-	# Copy file in output directory
-	echo "cp  $gemma_file /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/"
-	cp  $gemma_file /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/
 }
 
 # Example:
