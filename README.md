@@ -51,7 +51,7 @@ The value 12.3, 13.4, 15.3 being the height of the accessions 1001, 1002, and 10
 * The part 1, 2, and 3 are done interactively in R (need to be adjusted according to the dataframe used)
 * The part 3 is done in bash through the run_gwas_gemma.sh script. The only variables being the input vcf file used (change path in the script file) and the phenotype file given as first argument in command  line:
 ```
-bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf)
+bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf
 ```
 
 * The part 4 is done interactively in R
@@ -73,7 +73,7 @@ If GWAS is to be performed in ChromatinJ output:
 -Change the path of the file to import and indicate which phenotype is wanted and which name for this phenotype should be given
 
 ### run_gwas_gemma.sh
--Provide the two arguments (path to phenotype file and path to VCF file)
+-Provide the two arguments (phenotype file and VCF file). Note that the two input files should be located in the same directory.
 
 ### gemma_analysis.Rmd
 -Change dir_file and file.name variables
