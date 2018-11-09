@@ -22,25 +22,61 @@ as described in the vcf file. Alternatively, one can process directly a tsv file
 the phenotype for interest with one value per row, with the same order than for the VCF file (no header)
 
 
-**For instance:**
+
+## VCF file preprocessing
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used.
+
+```
+
+# Subset the vcf file (list file contains the ID of each accession on different rows)
+vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode --out subset_80
+
+# The output file will be
+subset_80.recode.vcf
+
+# Compress and tabix the file
+bgzip subset_80.recode.vcf && tabix subset_80.recode.vcf.gz
+
+```
 
 Get list of accessions in vcf file:
+
 ```
-$ bcftool query -l myvcffile.vcf > order_accession.txt
+$ bcftool query -l  subset_80.recode.vcf.gz > order_accession.txt
 $ cat order_accession.txt
 1001
 1002
 1003
+
 ```
 
-Content of the phenotype file:
+Note that the vcf file should also be filtered to remove singletons and low quality calls.
+
+```
+# Get singleton positions
+vcftools --singletons --gvcf subset_80.recode.vcf.gz
+
+# The file out.singletons should be generated. Then exclude these positions from the vcf file
+vcftools --gvcf subset_80.recode.vcf --exclude-positions out.singletons \
+ --recode --recode-INFO-all --out subset_80_without_singletons
+
+# File generated subset_80_without_singletons.recode.vcf
+# Compress and tabix file
+bgzip subset_80_without_singletons.recode.vcf && tabix subset_80_without_singletons.recode.vcf.gz 
+
+```
+
+## Phenotype file
+
+Example of content for phenotype file:
+
 ```
 $ cat phenotype.tsv 
 12.3
 13.4
 15.3
 ```
-The value 12.3, 13.4, 15.3 being the height of the accessions 1001, 1002, and 1003, respectively.
+The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, and 1003, ..., respectively.
 
 # General pipeline
 1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order
