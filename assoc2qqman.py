@@ -13,6 +13,7 @@ import re
     from the association analysis command and performs 
     readjustment of the file to be compatible for Read
     R analysis with the package 'qqman'.
+    Compatible Python27 and Python37
 '''
 
 
@@ -32,7 +33,7 @@ def main():
     for line in lines_file:
         if line[:3] == "chr":  #First line should be header
             header = "SNP\tCHR\tBP\tP\tzscore"
-            print header
+            print(header)
         else:
             line = line.strip().split("\t")  # Get rid of EOL and Create a list based on \t separation
             SNP = line[2]  # third column
@@ -44,7 +45,7 @@ def main():
                 P = line[8]
                 zscore = line[7]
                 new_line = SNP, CHR, BP, P, zscore
-                print "\t".join(new_line)
+                print("\t".join(new_line))
     input_file.close()
 
 if __name__ == "__main__":
