@@ -165,21 +165,24 @@ else
 	plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}  
 fi
 
+
+echo -e "\nKeep only 5 first column from .fam file (remove 6th column of -9)"
+
+echo "cut -d' ' -f1,2,3,4,5 ${prefix_vcf}.fam > ${prefix_vcf}_modified.fam"
+cut -d' ' -f1,2,3,4,5 ${prefix_vcf}.fam > ${prefix_vcf}_modified.fam
+
+
 echo -e "\nPaste phenotype data to fam file and reformat it:"
 # Paste to fam file
-echo "paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam"
-paste -d ' ' ${prefix_vcf}.fam $phenotype_file > ${prefix_vcf}_modified.fam
-
-# Remove 6th column (-9)
-echo "awk '!(\$6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam"
-awk '!($6="")' ${prefix_vcf}_modified.fam  > ${prefix_vcf}_modified1.fam
+echo "paste -d ' ' ${prefix_vcf}_modified.fam $phenotype_file > ${prefix_vcf}.fam"
+paste -d ' ' ${prefix_vcf}_modified.fam $phenotype_file > ${prefix_vcf}.fam
 
 # Remove double spaces
-echo "sed -i 's/  / /g' ${prefix_vcf}_modified1.fam"
-sed -i 's/  / /g' ${prefix_vcf}_modified1.fam 
+#echo "sed -i 's/  / /g' ${prefix_vcf}_modified1.fam"
+#sed -i 's/  / /g' ${prefix_vcf}_modified1.fam 
 
-echo "mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam"
-mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam
+#echo "mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam"
+#mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam
 
 echo -e "\n############################# RUN GEMMA ##################################\n"
 # Run Gemma
@@ -227,6 +230,7 @@ else
 	else
 		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
 		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
+	fi
 fi
 
 # # Association Tests with Multivariate Linear Mixed Models
@@ -275,5 +279,4 @@ echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
 echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
-
 
