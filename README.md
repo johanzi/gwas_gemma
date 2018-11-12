@@ -92,6 +92,30 @@ bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf
 
 * The part 4 is done interactively in R
 
+## Use a covariate
+A strong peak can hide other peaks. In this case, the potential causative SNP in the peak can be used as covariate and the GWAS can be run again to assess what is the weight of the other SNPs when the covariate SNP weight is removed from the analysis.
+To do so one needs to generate a file with 2 columns, the first containings 1s and the second a code for the SNP to use as covariate. For example, if the SNP can be coded as 1 and the reference allele as 0, therefore, a set of 4 accessions were only the 2 first accessions have the SNP would yield a covariate file looking like this:
+
+```
+$ cat covariate_file.txt
+1	1
+1	1
+1	0
+1	0
+```
+
+This file can then be used in gemma such as:
+
+```
+gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c covariate_cmt2.txt
+```
+
+TODO: implement covariate analysis in the script. Currently, one needs to proceed manually from the script and do the polishing step.
+
+
+
+
+
 # Pipeline with ChromatinJ
 If GWAS is to be performed in ChromatinJ output:
 1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order with the R script process_chromatinJ_output.R (see example output file test_export_df.txt in directory 'examples')
