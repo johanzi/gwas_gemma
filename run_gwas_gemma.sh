@@ -40,11 +40,13 @@ assoc2qqman="${path_script}/assoc2qqman.py"
 # Help command if no arguments or -h argument is given 
 if [ "$1" == "-h" -o "$#" -eq 0 ] ; then
 	echo -e "\n" 
-	echo "Usage: `basename $0` <phenotype_file.tsv> <vcf_file.vcf> [-h]"
+	echo "Usage: `basename $0` <phenotype_file.tsv> <vcf_file.vcf> [covariate_file.txt] [-h]"
 	echo -e "\n" 
 	echo "Description: Provide as main argument a phenotype file" 
 	echo "generated in R (should have a .tsv extension) and a vcf files containing "
-	echo "the accessions described in the phenotype file (should have a .vcf extension)"
+	echo "the accessions described in the phenotype file (should have a .vcf extension)."
+	echo "Optional argument "covariate_file.txt" can be provided in third position"
+	echo "if covariate analysis is to be performed."
 	echo "`basename $0` generates several files derived from vcftools, p-link, and gemma"
 	echo "The file with ".assoc.clean.txt" as suffix contains the GWAS results and can be "
 	echo "uploaded in R for visualization (qqman library)"
@@ -53,7 +55,7 @@ exit 0
 fi
 
 # Test if 2 arguments were provided
-if [ "$#" -ne 2	]; then
+if [ "$#" -lt 2	]; then
 	echo "Argument(s) missing"
 	exit 0
 fi
@@ -89,7 +91,24 @@ if [[ $nb_samples != $nb_phenotypes ]]; then
 	exit 0
 fi
 
+# Check if covariate file is provided
+if [ "$#" -eq 3 ];	then
+	covariate_file=$3
+	# Check if file exists
+	if [ -e $covariate_file ]; then		
+		# Check if number of lines equal number of samples
+		line_covariate_file=$(echo $covariate_file | wc -l)
+		if [[ $line_covariate_file != $nb_phenotypes ]]; then
+			echo "Number of lines in covariate file and number of phenotypes are not equal! verify files"
+			exit 0
+		fi
+	else
+			echo "Covariate file $covariate_file does not exist"
+			exit 0
+	fi
+fi
 
+	
 ##################################################################################
 
 # Directory containing the phenotype file and which will contain final GWAS results
@@ -195,14 +214,19 @@ fi
 # Use lmm 2 to performs likelihood ratio test
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
+# If covariate file is provided as third argument, perform covariate analysis
 
 echo -e "\nPerform the association test:"
 
 if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
-	gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
+	if [ $covariate_file ]; then
+		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file"
+		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file
+	else
+		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
+		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
 fi
 
 # # Association Tests with Multivariate Linear Mixed Models
