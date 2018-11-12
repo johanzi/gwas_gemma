@@ -107,11 +107,10 @@ $ cat covariate_file.txt
 This file can then be used in gemma such as:
 
 ```
-gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c covariate_cmt2.txt
+bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf covariate_file.txt
 ```
 
-TODO: implement covariate analysis in the script. Currently, one needs to proceed manually from the script and do the polishing step.
-
+TODO: implement covariate analysis in the script. Currently, one needs to proceed manually from the script and do the polishing step. Done but need to be tested.
 
 
 
