@@ -24,7 +24,7 @@ the phenotype for interest with one value per row, with the same order than for 
 
 
 ## VCF file preprocessing
-Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used.
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. A good VCF file input should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size).
 
 ```
 
