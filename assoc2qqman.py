@@ -36,7 +36,7 @@ def main():
             print(header)
         else:
             line = line.strip().split("\t")  # Get rid of EOL and Create a list based on \t separation
-            SNP = line[2]  # third column
+            SNP = line[1].replace(":","_")  # Second column but replace column by underscore
             chr_name = line[1].split(":")
             #Keep only lines matching chromosomes (exclude Mt, Pt, ...)
             if chr_name[0][0:3] == "Chr":
