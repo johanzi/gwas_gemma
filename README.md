@@ -24,7 +24,7 @@ the phenotype for interest with one value per row, with the same order than for 
 
 
 ## VCF file preprocessing
-Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. A good VCF file input should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size).
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the SNP calls should be filtered by their quality, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3).
 
 ```
 
@@ -34,8 +34,21 @@ vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode --out s
 # The output file will be
 subset_80.recode.vcf
 
+# Remove indels and low quality SNPs (DP>=3 and GQ>=25)
+vcftools --vcf subset_80.recode.vcf --remove-indels --minDP 3 --minGQ 25 --recode --recode-INFO-ALL --out subset_80_no_indels_DP3_GQ25
+
+# Keep only position with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
+bcftools view --min-ac=1 --max-alleles 2  subset_80_no_indels_DP3_GQ25.recode.vcf >  subset_80_no_indels_DP3_GQ25.recode.vcf > subset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf
+
+# Remove singletons
+## Generates out.singletons (positions of all singletons)
+vcftools --singletons --vcf subset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf
+
+## Exclude singleton position (only first and second column of the file needed) (cat singleton.out | cut -f1,2 > file.position)
+vcftools --vcf ubset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf --exclude-positions out.singletons --recode --recode-INFO-all --out subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons
+
 # Compress and tabix the file
-bgzip subset_80.recode.vcf && tabix subset_80.recode.vcf.gz
+bgzip subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf && tabix subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz
 
 ```
 
@@ -47,22 +60,6 @@ $ cat order_accession.txt
 1001
 1002
 1003
-
-```
-
-Note that the vcf file should also be filtered to remove singletons and low quality calls.
-
-```
-# Get singleton positions
-vcftools --singletons --gvcf subset_80.recode.vcf.gz
-
-# The file out.singletons should be generated. Then exclude these positions from the vcf file
-vcftools --gvcf subset_80.recode.vcf --exclude-positions out.singletons \
- --recode --recode-INFO-all --out subset_80_without_singletons
-
-# File generated subset_80_without_singletons.recode.vcf
-# Compress and tabix file
-bgzip subset_80_without_singletons.recode.vcf && tabix subset_80_without_singletons.recode.vcf.gz 
 
 ```
 
@@ -87,7 +84,7 @@ The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, a
 * The part 1, 2, and 3 are done interactively in R (need to be adjusted according to the dataframe used)
 * The part 3 is done in bash through the run_gwas_gemma.sh script. The only variables being the input vcf file used (change path in the script file) and the phenotype file given as first argument in command  line:
 ```
-bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf
+bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz
 ```
 
 * The part 4 is done interactively in R
@@ -107,7 +104,7 @@ $ cat covariate_file.txt
 This file can then be used in gemma such as:
 
 ```
-bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf covariate_file.txt
+bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
 ```
 
 TODO: implement covariate analysis in the script. Currently, one needs to proceed manually from the script and do the polishing step. Done but need to be tested.
