@@ -9,7 +9,7 @@
 # phenotype in the phenotype file
 
 # USAGE:
-# run_gwas_gemma.sh <phenotype_file.tsv> <vcf_file.vcf> <model>
+# run_gwas_gemma.sh <phenotype_file.tsv> <vcf_file.vcf> [covariate_file.txt]
 
 # Output is a .assoc.clean.txt file which can be loaded in R to look at significant SNPs.
 # All generated files are located where <phenotype_file.tsv> is and the subdirectory "output"
