@@ -50,8 +50,11 @@ vcftools --vcf ubset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf --exclu
 # Compress and tabix the file
 bgzip subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf && tabix subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz
 
-# Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you remove them as it decreases the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
-vcftools --keep ID_CPV_wo_conta.txt --gzvcf subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz --chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 --recode --out  subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons_only_chr
+# Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), 
+# you remove them as it decreases the number of SNPs to be tested and therefore 
+# decrease the threshold of significance (if Bonferroni correction is used for instance). 
+# In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
+vcftools --gzvcf subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz --chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 --recode --out  subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons_only_chr
 
 ```
 
@@ -120,7 +123,11 @@ An example of GWAS plot would look like this:
 
 ![](images/example_manhattan_plot.png)
 
-In this case, no SNP has a p-value below the threshold of -log10(10E-5).
+In this case, no SNP has a p-value below the threshold of -log10(10E-5) (indicated by the blue line). To know more about the qqman package
+
+* https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
+* https://cran.r-project.org/web/packages/qqman/qqman.pdf
+* https://github.com/stephenturner/qqman
 
 
 
