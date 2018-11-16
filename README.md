@@ -1,7 +1,7 @@
 GWAS pipeline with GEMMA
 =====
 
-Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype.
+Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype for each of the sample.
 
 # Softwares needed
 * Python 2.7
@@ -16,8 +16,8 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
 
 # Files needed
 * VCF file with the accessions/samples
-* text file containing the order of the accessions in the VCF file (order_accession.txt)
-* file containing the phenotypes of interest with a column containing the name of the accession
+* Text file containing the order of the accessions in the VCF file (`order_accession.txt`)
+* File containing the phenotypes of interest with a column containing the name of the accession
 as described in the vcf file. Alternatively, one can process directly a tsv file containing
 the phenotype for interest with one value per row, with the same order than for the VCF file (no header)
 
@@ -26,26 +26,37 @@ the phenotype for interest with one value per row, with the same order than for 
 ## VCF file preprocessing
 Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
+
+### Subset the vcf file
+
+list file i`list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
+
+```
+vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-INFO-all --out subset_80
 ```
 
-# Subset the vcf file (list file contains the ID of each accession on different rows)
-vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-INFO-all --out subset_80
+The output file will be `subset_80.recode.vcf`
 
-# The output file will be
-subset_80.recode.vcf
 
-# VCF file can be heavy and usually most of lines do not contain information (no ALT allele), remove then
-# now to reduce size of the file and go faster with next step
-# Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
+### Keep alternative and biallelic alleles only
+
+VCF file can be heavy and usually most of lines do not contain information (no ALT allele), remove then now to reduce size of the file and go faster with next step keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
+
+```
 bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biallelic_only_alt.recode.vcf
+```
 
 
+### Remove indels and hide GT of individuals with low quality call (DP>=3 and GQ>=25)
 
-# Remove indels and hide GT of individuals with low quality call (DP>=3 and GQ>=25)
+```
 vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
 			 --recode --recode-INFO-ALL --out subset_80_biallelic_only_alt_no_indels
+```
 
-# Remove singletons
+### Remove singletons
+
+```
 ## Generates out.singletons (positions of all singletons)
 vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
 
@@ -53,22 +64,29 @@ vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
 vcftools --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf \
 			--exclude-positions out.singletons --recode --recode-INFO-all \
 			--out subset_80_biallelic_only_alt_no_indels_no_singletons 
+```
 
-# Compress and tabix the file
+
+### Compress and tabix the file
+
+```
 bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
 			tabix subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz 
+```
 
-# Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), 
-# you should remove them as they increase the number of SNPs to be tested and therefore 
-# decrease the threshold of significance (if Bonferroni correction is used for instance). 
-# In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
+
+### Remove unwanted chromosomes
+
+Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
+
+```
 vcftools --gzvcf subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz \
 			--chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 \
 			--recode --out  subset_80_biallelic_only_alt_no_indels_no_singletons_only_chr
 
 ```
 
-Get list of accessions in vcf file:
+### Get list of accessions in vcf file:
 
 ```
 $ bcftool query -l  subset_80.recode.vcf.gz > order_accession.txt
@@ -78,6 +96,7 @@ $ cat order_accession.txt
 1003
 
 ```
+
 
 ## Phenotype file
 
@@ -91,16 +110,21 @@ $ cat phenotype.tsv
 ```
 The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, and 1003, ..., respectively.
 
-# General pipeline
+# Pipeline
+
+Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). 
+
 1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order
-2. Generate a file for one phenotype from the previously generated dataframe (test_export_df.txt)
-3. Process the phenotype file with plink and gemma (run_gwas_gemma.sh). This step should be run directly into the directory containing the vcf file and the phenotype file.
-4. Import in R the output phenotype.assoc.clean.txt file to visualize GWAS results, see [gemma_analysis.Rmd](gemma_analysis.Rmd)
+2. Generate a file for one phenotype from the previously generated dataframe (`test_export_df.txt`)
+3. Process the phenotype file with plink and gemma (`run_gwas_gemma.sh`). This step should be run directly into the directory containing the vcf file and the phenotype file.
+4. Import in R the output `phenotype.assoc.clean.txt` file to visualize GWAS results, see [gemma_analysis.Rmd](gemma_analysis.Rmd)
 
 * The part 1, 2, and 4 are done interactively in R (need to be adjusted according to the dataframe used)
 * The part 3 is done in bash through the run_gwas_gemma.sh script. The only variables being the input vcf file used (change path in the script file) and the phenotype file given as first argument in command  line:
 * The part 4 is done interactively in R
 
+
+Run the pipeline using bash:
 
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz
