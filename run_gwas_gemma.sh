@@ -273,10 +273,22 @@ if [[ $current_path != $dir_file ]]; then
 	rm -r ${current_path}/output
 fi
 
-# Create a log output file
-echo -e "\nLog generated as log_gwas_${prefix_gwas}.txt"
-echo "File analyzed: $phenotype_file" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
-echo "VCF file used: $vcf_file" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
-echo "Output file in ${dir_file}/output" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
-echo "Date: $(date)" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
+
+echo -e "\n############################ GENERATE LOG FILE  #################################\n"
+
+# Create a log output file and integrate gemma log file
+
+# Check if log from gemma was successfully generated
+if [ -e ${current_path}/output/${prefix_gwas}.log.txt ]; then
+	echo -e "\nLog generated as ${prefix_gwas}.log"
+	echo "File analyzed: $phenotype_file" > ${current_path}/output/temp.txt
+	echo "VCF file used: $vcf_file" >> ${current_path}/output/temp.txt
+	echo "Output file in ${dir_file}/output" >> ${current_path}/output/temp.txt
+	echo "Date: $(date)" >> ${current_path}/output/temp.txt
+	echo -e "Log output from GEMMA: \n" >>  ${current_path}/output/temp.txt
+	cat ${current_path}/output/temp.txt ${current_path}/output/${prefix_gwas}.log.txt > ${current_path}/output/${prefix_gwas}.log
+	rm ${current_path}/output/temp.txt && rm ${current_path}/output/${prefix_gwas}.log.txt
+else
+	echo -e "Gemma did not generate a log, a problem occured in the pipeline!"
+fi
 
