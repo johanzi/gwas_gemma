@@ -275,8 +275,8 @@ fi
 
 # Create a log output file
 echo -e "\nLog generated as log_gwas_${prefix_gwas}.txt"
-echo "File analyzed: $phenotype_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
-echo "VCF file used: $vcf_file" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
-echo "Output file in ${dir_file}/output" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
-echo "Date: $(date)" >> ${dir_file}/log_gwas_${prefix_gwas}.txt
+echo "File analyzed: $phenotype_file" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
+echo "VCF file used: $vcf_file" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
+echo "Output file in ${dir_file}/output" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
+echo "Date: $(date)" >> ${current_path}/output/log_gwas_${prefix_gwas}.txt
 
