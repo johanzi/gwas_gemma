@@ -29,7 +29,7 @@ Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of 
 
 ### Subset the vcf file
 
-list file i`list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
+list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
 
 ```
 vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-INFO-all --out subset_80
@@ -38,7 +38,7 @@ vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-
 The output file will be `subset_80.recode.vcf`
 
 
-### Keep alternative and biallelic alleles only
+### Keep alternative and biallelic positions only
 
 VCF file can be heavy and usually most of lines do not contain information (no ALT allele), remove then now to reduce size of the file and go faster with next step keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
 
@@ -47,7 +47,14 @@ bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biall
 ```
 
 
-### Remove indels and hide GT of individuals with low quality call (DP>=3 and GQ>=25)
+### Remove indels and hide GT of individuals with low quality call 
+
+Two thresholds for coveragei (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
+
+* Lenient: DP>=3 AND GQ>=25
+* Stringent: DP>=5 AND GQ>=30
+
+Depending on the stringency required, one can choose either of these thresholds.
 
 ```
 vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
