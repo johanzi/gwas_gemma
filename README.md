@@ -24,37 +24,47 @@ the phenotype for interest with one value per row, with the same order than for 
 
 
 ## VCF file preprocessing
-Consider a VCF file containing 100 *Arabidopsis thaliana*, but only 80 accessions should be used in the GWAS. The VCF file must be first subsetted to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the SNP calls should be filtered by their quality, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3).
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
 ```
 
 # Subset the vcf file (list file contains the ID of each accession on different rows)
-vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode --out subset_80
+vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-INFO-all --out subset_80
 
 # The output file will be
 subset_80.recode.vcf
 
-# Remove indels and low quality SNPs (DP>=3 and GQ>=25)
-vcftools --vcf subset_80.recode.vcf --remove-indels --minDP 3 --minGQ 25 --recode --recode-INFO-ALL --out subset_80_no_indels_DP3_GQ25
+# VCF file can be heavy and usually most of lines do not contain information (no ALT allele), remove then
+# now to reduce size of the file and go faster with next step
+# Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
+bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biallelic_only_alt.recode.vcf
 
-# Keep only position with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
-bcftools view --min-ac=1 --max-alleles 2  subset_80_no_indels_DP3_GQ25.recode.vcf >  subset_80_no_indels_DP3_GQ25.recode.vcf > subset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf
+
+
+# Remove indels and hide GT of individuals with low quality call (DP>=3 and GQ>=25)
+vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
+			 --recode --recode-INFO-ALL --out subset_80_biallelic_only_alt_no_indels
 
 # Remove singletons
 ## Generates out.singletons (positions of all singletons)
-vcftools --singletons --vcf subset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf
+vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
 
-## Exclude singleton position (only first and second column of the file needed) (cat singleton.out | cut -f1,2 > file.position)
-vcftools --vcf ubset_80_no_indels_DP3_GQ25_biallelic_only_alt.recode.vcf --exclude-positions out.singletons --recode --recode-INFO-all --out subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons
+## Exclude singleton positions 
+vcftools --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf \
+			--exclude-positions out.singletons --recode --recode-INFO-all \
+			--out subset_80_biallelic_only_alt_no_indels_no_singletons 
 
 # Compress and tabix the file
-bgzip subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf && tabix subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz
+bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
+			tabix subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz 
 
 # Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), 
 # you should remove them as they increase the number of SNPs to be tested and therefore 
 # decrease the threshold of significance (if Bonferroni correction is used for instance). 
 # In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
-vcftools --gzvcf subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons.recode.vcf.gz --chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 --recode --out  subset_80_no_indels_DP3_GQ25_biallelic_only_alt_wo_singletons_only_chr
+vcftools --gzvcf subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz \
+			--chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 \
+			--recode --out  subset_80_biallelic_only_alt_no_indels_no_singletons_only_chr
 
 ```
 
