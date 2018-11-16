@@ -99,11 +99,73 @@ The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, a
 
 * The part 1, 2, and 4 are done interactively in R (need to be adjusted according to the dataframe used)
 * The part 3 is done in bash through the run_gwas_gemma.sh script. The only variables being the input vcf file used (change path in the script file) and the phenotype file given as first argument in command  line:
+* The part 4 is done interactively in R
+
+
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz
 ```
 
-* The part 4 is done interactively in R
+The output file is created in the subdirectory `output/`, which is automatically created by gemma from the directory containing the input vcf file. The name of the output file is `phenotype.assoc.clean.txt`. Note that the file `phenotype.assoc.txt` is the direct output of gemma but cannot be loaded by the `qqman` package in R due to a wrong organization of the column.
+
+
+In addition, 1 log files are generated
+
+One log file named `phenotype.log` is generated in the same directory `output/` and contains the different parameters of the run:
+
+* phenotype file used
+* VCF file used
+* name of the output
+* date of the run 
+* Log file content from GEMMA
+
+Example of log output:
+
+```
+
+File analyzed: CHH_genes_cluster6_subset_64.tsv
+VCF file used: subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.recode.vcf.gz
+Output file in /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output
+Date: Fri Nov 16 12:24:49 CET 2018
+Log output from GEMMA:
+
+##
+## GEMMA Version = 0.94
+##
+## Command Line Input = -bfile subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25 -k /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output/subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.cXX.txt -lmm 2 -o CHH_genes_cluster6_subset_64
+##
+## Summary Statistics:
+## number of total individuals = 64
+## number of analyzed individuals = 64
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs = 1566021
+## number of analyzed SNPs = 17175
+## REMLE log-likelihood in the null model = -114.18
+## MLE log-likelihood in the null model = -114.937
+## pve estimate in the null model = 0.848988
+## se(pve) in the null model = 0.0639243
+## vg estimate in the null model = 10.6163
+## ve estimate in the null model = 0.73981
+## beta estimate in the null model =   5.19004
+## se(beta) =   0.107515
+##
+## Computation Time:
+## total computation time = 0.2045 min
+## computation time break down:
+##      time on eigen-decomposition = 0.000166667 min
+##      time on calculating UtX = 0.00116667 min
+##      time on optimization = 0.0625 min
+##
+
+```
+
+
+More details about the run is also displayed as standard output when running `run_gwas_gemma.sh` and can be redirected to a log file if needed.
+```
+bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz > log.txt
+```
+
 
 ## Use a covariate
 A strong peak can hide other peaks. In this case, the potential causative SNP in the peak can be used as covariate and the GWAS can be run again to assess what is the weight of the other SNPs when the covariate SNP weight is removed from the analysis.
@@ -117,7 +179,7 @@ $ cat covariate_file.txt
 1	0
 ```
 
-This file can then be used in gemma such as:
+This file can then be used as third argument in run_gwas_gemma.sh such as:
 
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
