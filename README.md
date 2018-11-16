@@ -111,24 +111,19 @@ The output file is created in the subdirectory `output/`, which is automatically
 
 In addition, 1 log files are generated
 
-One log file named `phenotype.log` is generated in the same directory `output/` and contains the different parameters of the run:
-
-* phenotype file used
-* VCF file used
-* name of the output
-* date of the run 
-* Log file content from GEMMA
-
-Example of log output:
+One log file named `phenotype.log` is generated in the same directory `output/` and contains the different parameters of the run. Example of log output:
 
 ```
+LOG FILE
 
-File analyzed: CHH_genes_cluster6_subset_64.tsv
-VCF file used: subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.recode.vcf.gz
-Output file in /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output
-Date: Fri Nov 16 12:24:49 CET 2018
+Command: run_gwas_gemma.sh CHH_genes_cluster6_subset_64.tsv subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.recode.vcf.gz
+Phenotype file: CHH_genes_cluster6_subset_64.tsv
+VCF file: subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.recode.vcf.gz
+Output file: /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output/CHH_genes_cluster6_subset_64.assoc.clean.txt
+Run finished on Fri Nov 16 13:16:58 CET 2018
+Total time of the run: 13 seconds
+
 Log output from GEMMA:
-
 ##
 ## GEMMA Version = 0.94
 ##
@@ -151,11 +146,11 @@ Log output from GEMMA:
 ## se(beta) =   0.107515
 ##
 ## Computation Time:
-## total computation time = 0.2045 min
+## total computation time = 0.204333 min
 ## computation time break down:
-##      time on eigen-decomposition = 0.000166667 min
-##      time on calculating UtX = 0.00116667 min
-##      time on optimization = 0.0625 min
+##      time on eigen-decomposition = 0 min
+##      time on calculating UtX = 0.0015 min
+##      time on optimization = 0.0626667 min
 ##
 
 ```

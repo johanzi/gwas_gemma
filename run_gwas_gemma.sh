@@ -54,6 +54,9 @@ if [ "$1" == "-h" -o "$#" -eq 0 ] ; then
 exit 0
 fi
 
+# Time script
+start=$(date +%s)
+
 # Test if 2 arguments were provided
 if [ "$#" -lt 2	]; then
 	echo "Argument(s) missing"
@@ -273,6 +276,8 @@ if [[ $current_path != $dir_file ]]; then
 	rm -r ${current_path}/output
 fi
 
+end=$(date +%s)
+runtime=$((end-start))
 
 echo -e "\n############################ GENERATE LOG FILE  #################################\n"
 
@@ -280,15 +285,27 @@ echo -e "\n############################ GENERATE LOG FILE  #####################
 
 # Check if log from gemma was successfully generated
 if [ -e ${current_path}/output/${prefix_gwas}.log.txt ]; then
-	echo -e "\nLog generated as ${prefix_gwas}.log"
-	echo "File analyzed: $phenotype_file" > ${current_path}/output/temp.txt
-	echo "VCF file used: $vcf_file" >> ${current_path}/output/temp.txt
-	echo "Output file in ${dir_file}/output" >> ${current_path}/output/temp.txt
-	echo "Date: $(date)" >> ${current_path}/output/temp.txt
-	echo -e "Log output from GEMMA: \n" >>  ${current_path}/output/temp.txt
+	echo -e "\nLog generated in ${current_path}/output/${prefix_gwas}.log"
+	echo -e "LOG FILE\n" > ${current_path}/output/temp.txt
+	echo "Command: run_gwas_gemma.sh $phenotype_file $vcf_file" >> ${current_path}/output/temp.txt
+	echo "Phenotype file: $phenotype_file" >> ${current_path}/output/temp.txt
+	echo "VCF file: $vcf_file" >> ${current_path}/output/temp.txt
+	echo "Output file: ${dir_file}/output/${prefix_gwas}.assoc.clean.txt" >> ${current_path}/output/temp.txt
+	echo -e "Run finished on $(date)" >> ${current_path}/output/temp.txt
+	echo -e "Total time of the run: $runtime seconds \n" >> ${current_path}/output/temp.txt
+	echo "Log output from GEMMA:" >>  ${current_path}/output/temp.txt
 	cat ${current_path}/output/temp.txt ${current_path}/output/${prefix_gwas}.log.txt > ${current_path}/output/${prefix_gwas}.log
-	rm ${current_path}/output/temp.txt && rm ${current_path}/output/${prefix_gwas}.log.txt
+	rm ${current_path}/output/temp.txt ${current_path}/output/${prefix_gwas}.log.txt
 else
 	echo -e "Gemma did not generate a log, a problem occured in the pipeline!"
 fi
+
+
+echo -e "\n############################ END OF THE PIPELINE  #################################\n"
+
+
+
+
+
+
 
