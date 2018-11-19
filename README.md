@@ -4,6 +4,7 @@ GWAS pipeline with GEMMA
 Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype for each of the sample.
 
 # Softwares needed
+* Unix-like OS (Linux, Mac OS X, ...)
 * Python 2.7
 * R (>3.3.0) with the libraries indicated in the scripts
 * Unix/Mac OS X environment for manipulation in bash
@@ -40,7 +41,7 @@ The output file will be `subset_80.recode.vcf`
 
 ### Keep alternative and biallelic positions only
 
-VCF file can be heavy and usually most of lines do not contain information (no ALT allele), remove then now to reduce size of the file and go faster with next step keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT)
+A VCF file containing multiple samples can be quite heavy although most of the lines do not contain information relevant for GWAS (no alternative allele). One can therefore remove these positions to drastically reduce the size of the file, allowing faster processing in the next steps. Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT) with this command:
 
 ```
 bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biallelic_only_alt.recode.vcf
@@ -49,7 +50,7 @@ bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biall
 
 ### Remove indels and hide GT of individuals with low quality call 
 
-Two thresholds for coveragei (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
+Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
 
 * Lenient: DP>=3 AND GQ>=25
 * Stringent: DP>=5 AND GQ>=30
@@ -60,6 +61,8 @@ Depending on the stringency required, one can choose either of these thresholds.
 vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
 			 --recode --recode-INFO-ALL --out subset_80_biallelic_only_alt_no_indels
 ```
+
+Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
 
 ### Remove singletons
 
@@ -84,7 +87,7 @@ bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
 
 ### Remove unwanted chromosomes
 
-Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of Arabidopsis thaliana
+Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
 
 ```
 vcftools --gzvcf subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz \
@@ -117,9 +120,12 @@ $ cat phenotype.tsv
 ```
 The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, and 1003, ..., respectively.
 
+Note: remember to convert EOLs from dos to unix format if the phenotype file is prepared in Microsoft Excel or in general on a PC. The can be easily done with the following command in a unix system: `vim phenotype.tsv -c ":set ff=unix" -c ":wq"`.
+
 # Pipeline
 
-Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). 
+Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 1% per default but can be changed to for instance 5% by adding the flag `-maf 0.05` when generating the matrix and when performing the linear model fitting.
+
 
 1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order
 2. Generate a file for one phenotype from the previously generated dataframe (`test_export_df.txt`)

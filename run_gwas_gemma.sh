@@ -202,6 +202,7 @@ echo -e "\n############################# RUN GEMMA #############################
 # standardized matrix preferred if SNPs with lower MAF have larger effects 
 # Not that this file remains the same whatever phenotype is studied as it considers 
 # only the VCF file.
+# Add flag (-maf 0.05) to set it at 5% for instance).
 
 echo -e "Generate relatedness matrix:"
 if [ -e ${current_path}/output/${prefix_vcf}.cXX.txt ]; then
@@ -218,6 +219,8 @@ fi
 
 ## Association Tests with Univariate Linear Mixed Models
 # Use lmm 2 to performs likelihood ratio test
+# Note that minor allele frequency (MAF( threshold is set at 1% per default. 
+# Add flag (-maf 0.05) to set it at 5% for instance).
 # prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
 # assoc.txt file contains the results
 # If covariate file is provided as third argument, perform covariate analysis
