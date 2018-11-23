@@ -303,6 +303,9 @@ if [ -e ${current_path}/output/${prefix_gwas}.log.txt ]; then
 	echo "Command: run_gwas_gemma.sh $phenotype_file $vcf_file" >> ${current_path}/output/temp.txt
 	echo "Phenotype file: $phenotype_file" >> ${current_path}/output/temp.txt
 	echo "VCF file: $vcf_file" >> ${current_path}/output/temp.txt
+	if [ $covariate_file ]; then
+		echo "Covariate file: $covariate_file" >> ${current_path}/output/temp.txt
+	fi
 	echo "Output file: ${dir_file}/output/${prefix_gwas}.assoc.clean.txt" >> ${current_path}/output/temp.txt
 	echo -e "Run finished on $(date)" >> ${current_path}/output/temp.txt
 	echo -e "Total time of the run: $runtime seconds \n" >> ${current_path}/output/temp.txt
