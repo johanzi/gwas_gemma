@@ -100,10 +100,13 @@ if [ "$#" -eq 3 ];	then
 	# Check if file exists
 	if [ -e $covariate_file ]; then		
 		# Check if number of lines equal number of samples
-		line_covariate_file=$(echo $covariate_file | wc -l)
+		line_covariate_file=$(cat $covariate_file | wc -l)
 		if [[ $line_covariate_file != $nb_phenotypes ]]; then
 			echo "Number of lines in covariate file and number of phenotypes are not equal! verify files"
 			exit 0
+		else
+			# Get prefix of the covariate file to add as suffix in final output name
+			covariate_prefix="${covariate_file%.*}"
 		fi
 	else
 			echo "Covariate file $covariate_file does not exist"
@@ -227,10 +230,17 @@ fi
 
 echo -e "\nPerform the association test:"
 
+
+# Rename variable $prefix_gwas if covariate file was provided so
+# the output can be differentiated from same analysis without covariate file
+if [ $covariate_file ]; then
+	prefix_gwas="${prefix_gwas}_${covariate_prefix}"
+fi
+
 if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
-	if [ $covariate_file ]; then
+	if [ $covariate_file ]; then	
 		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file"
 		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file
 	else
@@ -305,10 +315,4 @@ fi
 
 
 echo -e "\n############################ END OF THE PIPELINE  #################################\n"
-
-
-
-
-
-
 
