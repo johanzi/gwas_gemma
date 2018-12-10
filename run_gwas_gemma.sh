@@ -17,7 +17,7 @@
 # Path to python script assoc2qqman.py (assumes the script is in the same
 # directory as this script)
 
-# Note that gemma output files will be made in the directory
+# Note that gemma output files will be generated in the directory
 # in which the user launches the script (not forcibly the directory containing the script or the input files)
 # We call this directory $current_path
 current_path=$(pwd)
@@ -139,8 +139,11 @@ prefix_gwas=$(basename -s .tsv $phenotype_file)
 
 # Prefix to generate plink files from input VCF file
 # Per default will be name of the VCF file before the first point
-prefix_vcf=$(echo $vcf_file | cut -d'.' -f1)
+path_prefix_vcf=$(echo $vcf_file | cut -d'.' -f1)
 
+# In case the file of the VCF file contains a path, get suffix of the vcf file
+# for output name for gemma
+prefix_vcf=$(basename $path_prefix_vcf)
 
 echo -e "\n###################### INPUT VARIABLES ###################################\n"
 
@@ -161,45 +164,39 @@ echo -e "\n###################### CONVERT VCF TO PLINK FORMAT ##################
 # Also check if input vcf file is compressed or not
 
 echo -e "Generate ped and map files:"
-if [ -e ${prefix_vcf}.ped ] && [ -e ${prefix_vcf}.map ]; then
-	echo -e "${prefix_vcf}.ped and ${prefix_vcf}.map already exists. Go to next step."
+if [ -e ${path_prefix_vcf}.ped ] && [ -e ${path_prefix_vcf}.map ]; then
+	echo -e "${path_prefix_vcf}.ped and ${path_prefix_vcf}.map already exists. Go to next step."
 else
 	if [[ $vcf_file == *.vcf ]]; then
-		printf "vcftools --vcf $vcf_file --plink --out ${prefix_vcf}"
-		vcftools --vcf $vcf_file --plink --out ${prefix_vcf}
+		printf "vcftools --vcf $vcf_file --plink --out ${path_prefix_vcf}"
+		vcftools --vcf $vcf_file --plink --out ${path_prefix_vcf}
 	elif [[ $vcf_file == *.vcf.gz ]]; then
-		printf "vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf}"
-		vcftools --gzvcf $vcf_file --plink --out ${prefix_vcf} 
+		printf "vcftools --gzvcf $vcf_file --plink --out ${path_prefix_vcf}"
+		vcftools --gzvcf $vcf_file --plink --out ${path_prefix_vcf} 
 	fi
 fi
 
 echo -e "\nGenerate bed, bim, and fam files:"
 # Make bed files: 3 files are created => .bed, .bim, .fam
-if [ -e ${prefix_vcf}.bed ] && [ -e ${prefix_vcf}.bim ] && [ -e ${prefix_vcf}.fam ]; then
-	echo "File ${prefix_vcf}.bed, ${prefix_vcf}.bim, ${prefix_vcf}.fam already exist. Go to next step."
+if [ -e ${path_prefix_vcf}.bed ] && [ -e ${path_prefix_vcf}.bim ] && [ -e ${path_prefix_vcf}.fam ]; then
+	echo "File ${path_prefix_vcf}.bed, ${path_prefix_vcf}.bim, ${path_prefix_vcf}.fam already exist. Go to next step."
 else
-	printf "plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}" 
-	plink --file ${prefix_vcf} --make-bed --out ${prefix_vcf}  
+	printf "plink --file ${path_prefix_vcf} --make-bed --out ${path_prefix_vcf}" 
+	plink --file ${path_prefix_vcf} --make-bed --out ${path_prefix_vcf}  
 fi
 
 
 echo -e "\nKeep only 5 first column from .fam file (remove 6th column of -9)"
 
-echo "cut -d' ' -f1,2,3,4,5 ${prefix_vcf}.fam > ${prefix_vcf}_modified.fam"
-cut -d' ' -f1,2,3,4,5 ${prefix_vcf}.fam > ${prefix_vcf}_modified.fam
+echo "cut -d' ' -f1,2,3,4,5 ${path_prefix_vcf}.fam > ${path_prefix_vcf}_modified.fam"
+cut -d' ' -f1,2,3,4,5 ${path_prefix_vcf}.fam > ${path_prefix_vcf}_modified.fam
 
 
 echo -e "\nPaste phenotype data to fam file and reformat it:"
 # Paste to fam file
-echo "paste -d ' ' ${prefix_vcf}_modified.fam $phenotype_file > ${prefix_vcf}.fam"
-paste -d ' ' ${prefix_vcf}_modified.fam $phenotype_file > ${prefix_vcf}.fam
+echo "paste -d ' ' ${path_prefix_vcf}_modified.fam $phenotype_file > ${path_prefix_vcf}.fam"
+paste -d ' ' ${path_prefix_vcf}_modified.fam $phenotype_file > ${path_prefix_vcf}.fam
 
-# Remove double spaces
-#echo "sed -i 's/  / /g' ${prefix_vcf}_modified1.fam"
-#sed -i 's/  / /g' ${prefix_vcf}_modified1.fam 
-
-#echo "mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam"
-#mv ${prefix_vcf}_modified1.fam ${prefix_vcf}.fam
 
 echo -e "\n############################# RUN GEMMA ##################################\n"
 # Run Gemma
@@ -222,8 +219,8 @@ echo -e "Generate relatedness matrix:"
 if [ -e ${current_path}/output/${prefix_vcf}.cXX.txt ]; then
 	echo -e "${current_path}/output/${prefix_vcf}.cXX.txt file already exists. Go to next step."
 else
-	echo -e "\ngemma -bfile ${prefix_vcf} -gk 1 -o ${prefix_vcf}"
-	gemma -bfile ${prefix_vcf} -gk 1 -o $prefix_vcf
+	echo -e "\ngemma -bfile ${path_prefix_vcf} -gk 1 -o ${prefix_vcf}"
+	gemma -bfile ${path_prefix_vcf} -gk 1 -o $prefix_vcf
 fi
 
 ## If needed, the relatedness matrix can be transformed into eigen values and eigen vectors
@@ -251,25 +248,25 @@ if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
 	if [ $covariate_file ]; then	
-		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file"
-		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file
+		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file"
+		gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file
 	else
-		echo -e "\ngemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
-		gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
+		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
+		gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}
 	fi
 fi
 
 # # Association Tests with Multivariate Linear Mixed Models
 # # several phenotypes can be given (for instance columns 1,2,3 of the phenotype file). Less than 10
 # # phenotypes are recommended
-# gemma -bfile ${prefix_vcf} -k ${current_path}/output/${prefix}.cXX.txt -lmm 2 -n 1 2 3 -o ${prefix}
+# gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix}.cXX.txt -lmm 2 -n 1 2 3 -o ${prefix}
 
 ## Bayesian Sparse Linear Mixed Model
 ## Use a standard linear BSLMM (-bslmm 1)
 ## Does not require a relatedness matrix (calculates it internally)
 ## Generates 5 output files: log, hyp.txt (estimated hyper-parameters), param.txt (posterior mean 
 ## estimates for the effect size parameters), prefix.bv contains 
-# gemma -bfile ${prefix_vcf} -bslmm 1 -o ${prefix}
+# gemma -bfile ${path_prefix_vcf} -bslmm 1 -o ${prefix}
 
 # To analyze the output of bslmm in R, one needs to plot the gamma value multiplied by beta value from the # param.txt (see more details on https://visoca.github.io/popgenomworkshop-gwas_gemma/)
 # see R script gemma_param.R
