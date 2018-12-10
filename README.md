@@ -59,7 +59,7 @@ Depending on the stringency required, one can choose either of these thresholds.
 
 ```
 vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
-			 --recode --recode-INFO-ALL --out subset_80_biallelic_only_alt_no_indels
+			 --recode --recode-INFO-all --out subset_80_biallelic_only_alt_no_indels
 ```
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
