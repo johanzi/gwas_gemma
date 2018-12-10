@@ -1,0 +1,32 @@
+
+################################################################################
+Mon Dec 10 16:29:17 CET 2018
+################################################################################
+
+Problem when absolute path for the VCF file is given:
+
+example
+phenotype file: /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/phenotype.tsv
+
+vcf file: /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/subset_134_SA_biallelic_only_alt_no_indels_no_singletons_only_chr.recode.vcf
+
+dir_file (directory where output/ will be): /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS
+
+current_path: /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS
+
+prefix plink output files: /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/subset_134_SA_biallelic_only_alt_no_indels_no_singletons_only_chr
+
+prefix gemma output files: phenotype
+
+
+
+gemma -bfile /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/subset_134_SA_biallelic_only_alt_no_indels_no_singletons_only_chr -gk 1 -o /srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/subset_134_SA_biallelic_only_alt_no_indels_no_singletons_only_chr
+
+error writing file: ./output//srv/biodata/dep_coupland/grp_hancock/Ahmed/CVI/GWAS/subset_134_SA_biallelic_only_alt_no_indels_no_singletons_only_chr.cXX.txt
+
+
+The problem is caused by the variable $prefix_vcf when containing a path instead of only a file name
+
+# Problem fixed => commit c4d08a347e6115b747b9fc39d1be1aedd09f351e
+
+################################################################################
