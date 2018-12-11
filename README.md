@@ -3,8 +3,39 @@ GWAS pipeline with GEMMA
 
 Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype for each of the sample.
 
+# Table of contents 
+
+- [On what platform can I work?](#section-id-11)
+- [Softwares needed](#section-id-14)
+- [Files needed](#section-id-26)
+  - [VCF file preprocessing](#section-id-36)
+    - [Subset the vcf file](#section-id-40)
+    - [Keep alternative and biallelic positions only](#section-id-50)
+    - [Remove indels and hide GT of individuals with low quality call](#section-id-58)
+    - [Remove singletons](#section-id-73)
+    - [Compress and tabix the file](#section-id-89)
+    - [Remove unwanted chromosomes](#section-id-97)
+    - [Get list of accessions in vcf file:](#section-id-107)
+  - [Phenotype file](#section-id-119)
+- [Pipeline](#section-id-133)
+  - [Use a covariate](#section-id-209)
+- [Analysis in R](#section-id-227)
+  - [User specific modifications](#section-id-244)
+    - [process_chromatinJ_output.Rmd](#section-id-246)
+    - [generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)](#section-id-250)
+    - [run_gwas_gemma.sh](#section-id-253)
+    - [gemma_analysis.Rmd](#section-id-256)
+- [Pipeline with ChromatinJ](#section-id-260)
+- [Authors](#section-id-268)
+- [License](#section-id-271)
+  
+
+<div id='section-id-11'/>
+
 # On what platform can I work?
 This pipeline was developed on a GNU/Linux system. It should theoretically work on Mac OS X providing that the required softwares are installed properly.
+
+<div id='section-id-14'/>
 
 # Softwares needed
 * Unix-like OS (Linux, Mac OS X, ...)
@@ -18,6 +49,8 @@ This pipeline was developed on a GNU/Linux system. It should theoretically work 
 
 *NB: The versions indicated were the ones used and tested. One can first try already installed versions before installing the recommended version.*
 
+<div id='section-id-26'/>
+
 # Files needed
 * VCF file with the accessions/samples (can be compressed with gzip or not)
 * Text file containing the order of the accessions in the VCF file (`order_accession.txt`)
@@ -28,9 +61,13 @@ the phenotype for interest with one value per row, with the same order than for 
 **Note: The phenotype file should be in unix format and should not contain empty lines.**
 
 
+<div id='section-id-36'/>
+
 ## VCF file preprocessing
 Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
+
+<div id='section-id-40'/>
 
 ### Subset the vcf file
 list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
@@ -42,6 +79,8 @@ vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-
 The output file will be `subset_80.recode.vcf`
 
 
+<div id='section-id-50'/>
+
 ### Keep alternative and biallelic positions only
 A VCF file containing multiple samples can be quite heavy although most of the lines do not contain information relevant for GWAS (no alternative allele). One can therefore remove these positions to drastically reduce the size of the file, allowing faster processing in the next steps. Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT) with this command:
 
@@ -49,6 +88,8 @@ A VCF file containing multiple samples can be quite heavy although most of the l
 bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biallelic_only_alt.recode.vcf
 ```
 
+
+<div id='section-id-58'/>
 
 ### Remove indels and hide GT of individuals with low quality call 
 Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
@@ -65,18 +106,25 @@ vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
 
+<div id='section-id-73'/>
+
 ### Remove singletons
 
-```
-## Generates out.singletons (positions of all singletons)
-vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
+Generates out.singletons (positions of all singletons)
 
-## Exclude singleton positions 
+```
+vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
+```
+
+Exclude singleton positions 
+
+```
 vcftools --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf \
 			--exclude-positions out.singletons --recode --recode-INFO-all \
 			--out subset_80_biallelic_only_alt_no_indels_no_singletons 
 ```
 
+<div id='section-id-89'/>
 
 ### Compress and tabix the file
 
@@ -85,6 +133,8 @@ bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
 			tabix subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz 
 ```
 
+
+<div id='section-id-97'/>
 
 ### Remove unwanted chromosomes
 Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
@@ -95,6 +145,8 @@ vcftools --gzvcf subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf
 			--recode --out  subset_80_biallelic_only_alt_no_indels_no_singletons_only_chr
 
 ```
+
+<div id='section-id-107'/>
 
 ### Get list of accessions in vcf file:
 
@@ -107,6 +159,8 @@ $ cat order_accession.txt
 
 ```
 
+
+<div id='section-id-119'/>
 
 ## Phenotype file
 
@@ -121,6 +175,8 @@ $ cat phenotype.tsv
 The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, and 1003, ..., respectively.
 
 Note: remember to convert EOLs from dos to unix format if the phenotype file is prepared in Microsoft Excel or in general on a PC. The can be easily done with the following command in a unix system: `vim phenotype.tsv -c ":set ff=unix" -c ":wq"`.
+
+<div id='section-id-133'/>
 
 # Pipeline
 Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 1% per default but can be changed to for instance 5% by adding the flag `-maf 0.05` when generating the matrix and when performing the linear model fitting.
@@ -159,35 +215,35 @@ Output file: /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/ou
 Run finished on Fri Nov 16 13:16:58 CET 2018
 Total time of the run: 13 seconds
 
-Log output from GEMMA:
-##
-## GEMMA Version = 0.94
-##
-## Command Line Input = -bfile subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25 -k /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output/subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.cXX.txt -lmm 2 -o CHH_genes_cluster6_subset_64
-##
-## Summary Statistics:
-## number of total individuals = 64
-## number of analyzed individuals = 64
-## number of covariates = 1
-## number of phenotypes = 1
-## number of total SNPs = 1566021
-## number of analyzed SNPs = 17175
-## REMLE log-likelihood in the null model = -114.18
-## MLE log-likelihood in the null model = -114.937
-## pve estimate in the null model = 0.848988
-## se(pve) in the null model = 0.0639243
-## vg estimate in the null model = 10.6163
-## ve estimate in the null model = 0.73981
-## beta estimate in the null model =   5.19004
-## se(beta) =   0.107515
-##
-## Computation Time:
-## total computation time = 0.204333 min
-## computation time break down:
-##      time on eigen-decomposition = 0 min
-##      time on calculating UtX = 0.0015 min
-##      time on optimization = 0.0626667 min
-##
+> Log output from GEMMA:
+> ##
+> ## GEMMA Version = 0.94
+> ##
+> ## Command Line Input = -bfile subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25 -k /srv/biodata/dep_coupland/grp_hancock/johan/GWAS/dna_methylation/output/subset_64_accessions_only_alt_wo_singletons_biallelic_only_wo_indels_minDP3_minGQ25.cXX.txt -lmm 2 -o CHH_genes_cluster6_subset_64
+> ##
+> ## Summary Statistics:
+> ## number of total individuals = 64
+> ## number of analyzed individuals = 64
+> ## number of covariates = 1
+> ## number of phenotypes = 1
+> ## number of total SNPs = 1566021
+> ## number of analyzed SNPs = 17175
+> ## REMLE log-likelihood in the null model = -114.18
+> ## MLE log-likelihood in the null model = -114.937
+> ## pve estimate in the null model = 0.848988
+> ## se(pve) in the null model = 0.0639243
+> ## vg estimate in the null model = 10.6163
+> ## ve estimate in the null model = 0.73981
+> ## beta estimate in the null model =   5.19004
+> ## se(beta) =   0.107515
+> ##
+> ## Computation Time:
+> ## total computation time = 0.204333 min
+> ## computation time break down:
+> ##      time on eigen-decomposition = 0 min
+> ##      time on calculating UtX = 0.0015 min
+> ##      time on optimization = 0.0626667 min
+> ##
 
 ```
 
@@ -197,6 +253,8 @@ More details about the run is also displayed as standard output when running `ru
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz > log.txt
 ```
 
+
+<div id='section-id-209'/>
 
 ## Use a covariate
 A strong peak can hide other peaks. In this case, the potential causative SNP in the peak can be used as covariate and the GWAS can be run again to assess what is the weight of the other SNPs when the covariate SNP weight is removed from the analysis.
@@ -216,6 +274,8 @@ This file can then be used as third argument in run_gwas_gemma.sh such as:
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
 ```
 
+<div id='section-id-227'/>
+
 # Analysis in R
 
 The output file `phenotype.assoc.clean.txt` generated by gemma can be imported in R and plotted using qqman package. See the example in [gemma_analysis.Rmd](gemma_analysis.Rmd). Note that if a covariate file was used, the output file names will contain the name of the covariate file as suffix to distinguish them from the files generated with the same phenotype input but without covariate.  
@@ -233,21 +293,33 @@ In this case, no SNP has a p-value above the threshold of -log10(10E-5) (indicat
 
 
 
+<div id='section-id-244'/>
+
 ## User specific modifications
+
+<div id='section-id-246'/>
 
 ### process_chromatinJ_output.Rmd
 -Indicate path of the ChromatinJ output results files
 -Indicate path to file containing the order of the accessions from the VCF file
 
+<div id='section-id-250'/>
+
 ### generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)
 -Change the path of the file to import and indicate which phenotype is wanted and which name for this phenotype should be given
+
+<div id='section-id-253'/>
 
 ### run_gwas_gemma.sh
 -Provide the two arguments (phenotype file and VCF file). Note that the two input files should be located in the same directory.
 
+<div id='section-id-256'/>
+
 ### gemma_analysis.Rmd
 -Change dir_file and file.name variables
 
+
+<div id='section-id-260'/>
 
 # Pipeline with ChromatinJ
 If GWAS is to be performed in ChromatinJ output:
@@ -257,8 +329,12 @@ If GWAS is to be performed in ChromatinJ output:
 4. Import in R the output phenotype.assoc.clean.txt file to visualize GWAS results (script gemma_analysis.Rmd)
 
 
+<div id='section-id-268'/>
+
 # Authors
 * **Johan Zicola** - [johanzi](https://github.com/johanzi)
+
+<div id='section-id-271'/>
 
 # License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
