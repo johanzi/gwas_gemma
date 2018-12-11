@@ -3,9 +3,12 @@ GWAS pipeline with GEMMA
 
 Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype for each of the sample.
 
+# On what platform can I work?
+This pipeline was developed on a GNU/Linux system. It should theoretically work on Mac OS X providing that the required softwares are installed properly.
+
 # Softwares needed
 * Unix-like OS (Linux, Mac OS X, ...)
-* Python 2.7
+* Python 2.7 or 3.4
 * R (>3.3.0) with the libraries indicated in the scripts
 * Unix/Mac OS X environment for manipulation in bash
 * p-link (v1.07)
@@ -16,12 +19,13 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
 *NB: The versions indicated were the ones used and tested. One can first try already installed versions before installing the recommended version.*
 
 # Files needed
-* VCF file with the accessions/samples
+* VCF file with the accessions/samples (can be compressed with gzip or not)
 * Text file containing the order of the accessions in the VCF file (`order_accession.txt`)
 * File containing the phenotypes of interest with a column containing the name of the accession
 as described in the vcf file. Alternatively, one can process directly a tsv file containing
 the phenotype for interest with one value per row, with the same order than for the VCF file (no header)
 
+**Note: The phenotype file should be in unix format and should not contain empty lines.**
 
 
 ## VCF file preprocessing
@@ -29,7 +33,6 @@ Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of 
 
 
 ### Subset the vcf file
-
 list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
 
 ```
@@ -40,7 +43,6 @@ The output file will be `subset_80.recode.vcf`
 
 
 ### Keep alternative and biallelic positions only
-
 A VCF file containing multiple samples can be quite heavy although most of the lines do not contain information relevant for GWAS (no alternative allele). One can therefore remove these positions to drastically reduce the size of the file, allowing faster processing in the next steps. Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT) with this command:
 
 ```
@@ -49,7 +51,6 @@ bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biall
 
 
 ### Remove indels and hide GT of individuals with low quality call 
-
 Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
 
 * Lenient: DP>=3 AND GQ>=25
@@ -86,7 +87,6 @@ bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
 
 
 ### Remove unwanted chromosomes
-
 Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
 
 ```
@@ -123,7 +123,6 @@ The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, a
 Note: remember to convert EOLs from dos to unix format if the phenotype file is prepared in Microsoft Excel or in general on a PC. The can be easily done with the following command in a unix system: `vim phenotype.tsv -c ":set ff=unix" -c ":wq"`.
 
 # Pipeline
-
 Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 1% per default but can be changed to for instance 5% by adding the flag `-maf 0.05` when generating the matrix and when performing the linear model fitting.
 
 
@@ -216,9 +215,6 @@ This file can then be used as third argument in run_gwas_gemma.sh such as:
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
 ```
-
-TODO: implement covariate analysis in the script. Currently, one needs to proceed manually from the script and do the polishing step. Done but need to be tested.
-
 
 # Analysis in R
 
