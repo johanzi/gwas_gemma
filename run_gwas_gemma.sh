@@ -249,10 +249,10 @@ if [ -e ${current_path}/output/${prefix_gwas}.assoc.txt ]; then
 	echo "${current_path}/output/${prefix_gwas}.assoc.txt already exists. Go to next step"
 else
 	if [ $covariate_file ]; then	
-		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file"
-		gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas} -c $covariate_file
+		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -maf 0.05 -o ${prefix_gwas} -c $covariate_file"
+		gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -maf 0.05 -o ${prefix_gwas} -c $covariate_file
 	else
-		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -o ${prefix_gwas}"
+		echo -e "\ngemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -maf 0.05 -o ${prefix_gwas}"
 		gemma -bfile ${path_prefix_vcf} -k ${current_path}/output/${prefix_vcf}.cXX.txt -lmm 2 -maf 0.05 -o ${prefix_gwas}
 	fi
 fi
