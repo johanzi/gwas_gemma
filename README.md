@@ -285,7 +285,13 @@ An example of GWAS plot would look like this:
 
 ![](images/example_manhattan_plot.png)
 
-In this case, no SNP has a p-value above the threshold of -log10(10E-5) (indicated by the blue line). To know more about the qqman package:
+In this case, no SNP has a p-value above the threshold of -log10(10E-5) (indicated by the blue line). 
+
+![](images/example_manhattan_plot2.png)
+
+In this case, a clear peak is visible in chromosome 4 and 5. The SNPs above the blue line threshold are highlighted in green. The blue line "suggestive line" (-log10(1e-5)) and the red line "genome-wide line" (-log10(5e-8)) are default in qqman and can be removed by setting `suggestiveline=FALSE, genomewideline=FALSE` in the plot command.
+
+To know more about the qqman package:
 
 * https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
 * https://cran.r-project.org/web/packages/qqman/qqman.pdf
