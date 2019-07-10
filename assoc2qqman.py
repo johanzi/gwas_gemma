@@ -41,11 +41,14 @@ def main():
             #Keep only lines matching chromosomes (exclude Mt, Pt, ...)
             if chr_name[0][0:3] == "Chr":
                 CHR = chr_name[0].replace("Chr", "")
-                BP = line[2]
-                P = line[8]
-                zscore = line[7]
-                new_line = SNP, CHR, BP, P, zscore
-                print("\t".join(new_line))
+            # In case the chromosomes do not have prefix but are simple integer
+            elif int(chr_name[0][0]): 
+                CHR = chr_name[0]
+            BP = line[2]
+            P = line[8]
+            zscore = line[7]
+            new_line = SNP, CHR, BP, P, zscore
+            print("\t".join(new_line))
     input_file.close()
 
 if __name__ == "__main__":
