@@ -64,20 +64,32 @@ the phenotype for interest with one value per row, with the same order than for 
 <div id='section-id-36'/>
 
 ## VCF file preprocessing
-Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. To do this, [vcftools](https://vcftools.github.io/man_latest.html) can be used. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
+I divide here the steps into intermediary files for clarity. Refer to the one-liner afterwards to reduce the number of steps and time of execution.
 
 <div id='section-id-40'/>
 
 ### Subset the vcf file
-list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows.
+list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows. Note that subsetting is also possible with vcftools but takes about 8x longer. The same is true for other steps, bcftools always perform better.
 
 ```
-vcftools --keep list_accessions_to_keep.txt --gzvcf file.vcf.gz --recode recode-INFO-all --out subset_80
+bcftools -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
 ```
 
-The output file will be `subset_80.recode.vcf`
+The output file will be `subset_80.vcf`
 
+
+<div id='section-id-97'/>
+
+### Remove unwanted chromosomes
+Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
+
+```
+bcftools view -r Chr1,Chr2,Chr3,Chr4,Chr5 subset_80.vcf > subset_80_only_chr.vcf
+
+
+```
 
 <div id='section-id-50'/>
 
@@ -85,11 +97,10 @@ The output file will be `subset_80.recode.vcf`
 A VCF file containing multiple samples can be quite heavy although most of the lines do not contain information relevant for GWAS (no alternative allele). One can therefore remove these positions to drastically reduce the size of the file, allowing faster processing in the next steps. Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT) with this command:
 
 ```
-bcftools view --min-ac=1 --max-alleles 2  subset_80.recode.vcf > subset_80_biallelic_only_alt.recode.vcf
+bcftools view --min-ac=1 --max-alleles 2  subset_80_only_chr.vcf > subset_80_only_chr_biallelic_only_alt.vcf
 ```
-
-
 <div id='section-id-58'/>
+
 
 ### Remove indels and hide GT of individuals with low quality call 
 Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
@@ -100,8 +111,7 @@ Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [
 Depending on the stringency required, one can choose either of these thresholds.
 
 ```
-vcftools --vcf subset_80_biallelic_only_alt.recode.vcf --remove-indels --minDP 3 --minGQ 25 \
-			 --recode --recode-INFO-all --out subset_80_biallelic_only_alt_no_indels
+bcftools -V indels -i 'MIN(FMT/DP)>2 & MIN(FMT/GQ)>24' subset_80_only_chr_biallelic_only_alt.vcf > subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
 ```
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
@@ -113,38 +123,43 @@ Note that gemma does not consider SNPs with missingness above a certain threshol
 Generates out.singletons (positions of all singletons)
 
 ```
-vcftools --singletons --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf
+vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
 ```
 
 Exclude singleton positions 
 
 ```
-vcftools --vcf subset_80_biallelic_only_alt_no_indels.recode.vcf \
+vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
 			--exclude-positions out.singletons --recode --recode-INFO-all \
-			--out subset_80_biallelic_only_alt_no_indels_no_singletons 
+			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons
 ```
+
+
+## Three-liners
+
+Here the commands to run if you don't need all the intermediary VCF files
+
+```
+bcftools view -S list_accessions_to_keep.txt -r Chr1,Chr2,Chr3,Chr4,Chr5 --min-ac=1 --max-alleles 2 -V indels -i 'MIN(FMT/DP)>2 & MIN(FMT/GQ)>24' file.vcf.gz > subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
+
+vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
+
+vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
+             --exclude-positions out.singletons --recode --recode-INFO-all \
+             --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons
+```
+
+
 
 <div id='section-id-89'/>
 
 ### Compress and tabix the file
 
 ```
-bgzip  subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf && \
-			tabix subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz 
+bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf && \
+			tabix subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf.gz 
 ```
 
-
-<div id='section-id-97'/>
-
-### Remove unwanted chromosomes
-Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
-
-```
-vcftools --gzvcf subset_80_biallelic_only_alt_no_indels_no_singletons.recode.vcf.gz \
-			--chr Chr1 --chr Chr2 --chr Chr3 --chr Chr4 --chr Chr5 \
-			--recode --out  subset_80_biallelic_only_alt_no_indels_no_singletons_only_chr
-
-```
 
 <div id='section-id-107'/>
 
