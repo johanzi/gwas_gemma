@@ -27,7 +27,6 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
     - [generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)](#section-id-282)
     - [run_gwas_gemma.sh](#section-id-286)
     - [gemma_analysis.Rmd](#section-id-290)
-- [Pipeline with ChromatinJ](#section-id-295)
 - [Authors](#section-id-304)
 - [License](#section-id-308)
  
@@ -226,9 +225,6 @@ bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz
 
 The output file is created in the subdirectory `output/`, which is automatically created by gemma from the directory containing the input vcf file. The name of the output file is `phenotype.assoc.clean.txt`. Note that the file `phenotype.assoc.txt` is the direct output of gemma but cannot be loaded by the `qqman` package in R due to a wrong organization of the column.
 
-
-In addition, 1 log files are generated
-
 One log file named `phenotype.log` is generated in the same directory `output/` and contains the different parameters of the run. Example of log output:
 
 ```
@@ -356,19 +352,6 @@ To know more about the qqman package:
 
 ### gemma_analysis.Rmd
 -Change dir_file and file.name variables
-
-
-
-<div id='section-id-295'/>
-
-# Pipeline with ChromatinJ
-If GWAS is to be performed in ChromatinJ output:
-1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order with the R script process_chromatinJ_output.R (see example output file test_export_df.txt in directory 'examples')
-2. Generate a file for one phenotype from the previously generated dataframe (test_export_df.txt) with the R script generate_phenotype_file.Rmd. The output is a file with a single column (no header) containing the phenotype of interest, scaled or not. See example files unscaled "Area_nucleus.tsv"
-3. Process the phenotype file with plink and gemma (run_gwas_gemma.sh). This step should be run directly into the directory containing the vcf file and the phenotype file.
-4. Import in R the output phenotype.assoc.clean.txt file to visualize GWAS results (script gemma_analysis.Rmd)
-
-
 
 <div id='section-id-304'/>
 
