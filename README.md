@@ -15,7 +15,6 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
     - [Keep alternative and biallelic positions only](#section-id-60)
     - [Remove indels and hide GT of individuals with low quality call](#section-id-68)
     - [Remove singletons](#section-id-83)
-	- [Three-liners](#section-id-100)
     - [Compress and tabix the file](#section-id-117)
     - [Get list of accessions in vcf file:](#section-id-126)
   - [Phenotype file](#section-id-139)
@@ -67,8 +66,6 @@ the phenotype for interest with one value per row, with the same order than for 
 ## VCF file preprocessing
 Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
-I divide here the steps for the sake of clarity. Refer to [Three-liners](#section-id-100) to reduce the number of intermediary files and save CPU time.
-
 
 <div id='section-id-41'/>
 
@@ -80,7 +77,6 @@ bcftools -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
 ```
 
 The output file will be `subset_80.vcf`
-
 
 
 <div id='section-id-52'/>
@@ -137,25 +133,6 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
 			--exclude-positions out.singletons --recode --recode-INFO-all \
 			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons
 ```
-
-
-<div id='section-id-100'/>
-
-### Three-liners
-
-Here the commands to run if you don't need all the intermediary VCF files
-
-```
-bcftools view -S list_accessions_to_keep.txt -r Chr1,Chr2,Chr3,Chr4,Chr5 --min-ac=1 --max-alleles 2 -V indels -i 'MIN(FMT/DP)>2 & MIN(FMT/GQ)>24' file.vcf.gz > subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
-
-vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
-
-vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
-             --exclude-positions out.singletons --recode --recode-INFO-all \
-             --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons
-```
-
-
 
 
 <div id='section-id-117'/>
