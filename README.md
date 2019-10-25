@@ -4,38 +4,38 @@ GWAS pipeline with GEMMA
 Simplified pipeline that requires from the user a VCF file with the samples of interest and a phenotype for each of the sample.
 
 # Table of contents 
+<div id='section-id-7'/>
 
-- [On what platform can I work?](#section-id-11)
-- [Softwares needed](#section-id-14)
-- [Files needed](#section-id-26)
-  - [VCF file preprocessing](#section-id-36)
-    - [Subset the vcf file](#section-id-40)
-    - [Keep alternative and biallelic positions only](#section-id-50)
-    - [Remove indels and hide GT of individuals with low quality call](#section-id-58)
-    - [Remove singletons](#section-id-73)
-    - [Compress and tabix the file](#section-id-89)
-    - [Remove unwanted chromosomes](#section-id-97)
-    - [Get list of accessions in vcf file:](#section-id-107)
-  - [Phenotype file](#section-id-119)
-- [Pipeline](#section-id-133)
-  - [Use a covariate](#section-id-209)
-- [Analysis in R](#section-id-227)
-  - [User specific modifications](#section-id-244)
-    - [process_chromatinJ_output.Rmd](#section-id-246)
-    - [generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)](#section-id-250)
-    - [run_gwas_gemma.sh](#section-id-253)
-    - [gemma_analysis.Rmd](#section-id-256)
-- [Pipeline with ChromatinJ](#section-id-260)
-- [Authors](#section-id-268)
-- [License](#section-id-271)
-  
-
-<div id='section-id-11'/>
-
+- [On what platform can I work?](#section-id-7)
+- [Softwares needed](#section-id-11)
+- [Files needed](#section-id-24)
+  - [VCF file preprocessing](#section-id-35)
+    - [Subset the vcf file](#section-id-41)
+    - [Remove unwanted chromosomes](#section-id-52)
+    - [Keep alternative and biallelic positions only](#section-id-60)
+    - [Remove indels and hide GT of individuals with low quality call](#section-id-68)
+    - [Remove singletons](#section-id-83)
+	- [Three-liners](#section-id-100)
+    - [Compress and tabix the file](#section-id-117)
+    - [Get list of accessions in vcf file:](#section-id-126)
+  - [Phenotype file](#section-id-139)
+- [Pipeline](#section-id-154)
+  - [Use a covariate](#section-id-231)
+- [Analysis in R](#section-id-250)
+  - [User specific modifications](#section-id-274)
+    - [process_chromatinJ_output.Rmd](#section-id-277)
+    - [generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)](#section-id-282)
+    - [run_gwas_gemma.sh](#section-id-286)
+    - [gemma_analysis.Rmd](#section-id-290)
+- [Pipeline with ChromatinJ](#section-id-295)
+- [Authors](#section-id-304)
+- [License](#section-id-308)
+ 
 # On what platform can I work?
 This pipeline was developed on a GNU/Linux system. It should theoretically work on Mac OS X providing that the required softwares are installed properly.
 
-<div id='section-id-14'/>
+
+<div id='section-id-11'/>
 
 # Softwares needed
 * Unix-like OS (Linux, Mac OS X, ...)
@@ -49,7 +49,8 @@ This pipeline was developed on a GNU/Linux system. It should theoretically work 
 
 *NB: The versions indicated were the ones used and tested. One can first try already installed versions before installing the recommended version.*
 
-<div id='section-id-26'/>
+
+<div id='section-id-24'/>
 
 # Files needed
 * VCF file with the accessions/samples (can be compressed with gzip or not)
@@ -61,14 +62,16 @@ the phenotype for interest with one value per row, with the same order than for 
 **Note: The phenotype file should be in unix format and should not contain empty lines.**
 
 
-<div id='section-id-36'/>
+
+<div id='section-id-35'/>
 
 ## VCF file preprocessing
 Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
 
-I divide here the steps into intermediary files for clarity. Refer to the one-liner afterwards to reduce the number of steps and time of execution.
+I divide here the steps for the sake of clarity. Refer to [Three-liners](#section-id-100) to reduce the number of intermediary files and save CPU time.
 
-<div id='section-id-40'/>
+
+<div id='section-id-41'/>
 
 ### Subset the vcf file
 list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows. Note that subsetting is also possible with vcftools but takes about 8x longer. The same is true for other steps, bcftools always perform better.
@@ -80,18 +83,18 @@ bcftools -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
 The output file will be `subset_80.vcf`
 
 
-<div id='section-id-97'/>
+
+<div id='section-id-52'/>
 
 ### Remove unwanted chromosomes
 Note: If you have chromosomes or organelle genomes to be excluded (mitochondria, chloroplasts, ...), you should remove them as they increase the number of SNPs to be tested and therefore decrease the threshold of significance (if Bonferroni correction is used for instance). In this case I want to keep only the 5 chromosomes of *A. thaliana*
 
 ```
 bcftools view -r Chr1,Chr2,Chr3,Chr4,Chr5 subset_80.vcf > subset_80_only_chr.vcf
-
-
 ```
 
-<div id='section-id-50'/>
+
+<div id='section-id-60'/>
 
 ### Keep alternative and biallelic positions only
 A VCF file containing multiple samples can be quite heavy although most of the lines do not contain information relevant for GWAS (no alternative allele). One can therefore remove these positions to drastically reduce the size of the file, allowing faster processing in the next steps. Keep only positions with an alternative allele (--min-ac) and only biallelic positions (--max-alleles) (1 REF + 1 ALT) with this command:
@@ -99,8 +102,9 @@ A VCF file containing multiple samples can be quite heavy although most of the l
 ```
 bcftools view --min-ac=1 --max-alleles 2  subset_80_only_chr.vcf > subset_80_only_chr_biallelic_only_alt.vcf
 ```
-<div id='section-id-58'/>
 
+
+<div id='section-id-68'/>
 
 ### Remove indels and hide GT of individuals with low quality call 
 Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [Hancock lab](https://github.com/HancockLab)
@@ -116,7 +120,8 @@ bcftools -V indels -i 'MIN(FMT/DP)>2 & MIN(FMT/GQ)>24' subset_80_only_chr_bialle
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
 
-<div id='section-id-73'/>
+
+<div id='section-id-83'/>
 
 ### Remove singletons
 
@@ -135,7 +140,9 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
 ```
 
 
-## Three-liners
+<div id='section-id-100'/>
+
+### Three-liners
 
 Here the commands to run if you don't need all the intermediary VCF files
 
@@ -151,7 +158,8 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
 
 
 
-<div id='section-id-89'/>
+
+<div id='section-id-117'/>
 
 ### Compress and tabix the file
 
@@ -161,12 +169,13 @@ bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf &
 ```
 
 
-<div id='section-id-107'/>
+
+<div id='section-id-126'/>
 
 ### Get list of accessions in vcf file:
 
 ```
-$ bcftool query -l  subset_80.recode.vcf.gz > order_accession.txt
+$ bcftool query -l  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf.gz > order_accession.txt
 $ cat order_accession.txt
 1001
 1002
@@ -175,7 +184,8 @@ $ cat order_accession.txt
 ```
 
 
-<div id='section-id-119'/>
+
+<div id='section-id-139'/>
 
 ## Phenotype file
 
@@ -191,7 +201,8 @@ The value 12.3, 13.4, 15.3, ... being the height of the accessions 1001, 1002, a
 
 Note: remember to convert EOLs from dos to unix format if the phenotype file is prepared in Microsoft Excel or in general on a PC. The can be easily done with the following command in a unix system: `vim phenotype.tsv -c ":set ff=unix" -c ":wq"`.
 
-<div id='section-id-133'/>
+
+<div id='section-id-154'/>
 
 # Pipeline
 Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 1% per default but can be changed to for instance 5% by adding the flag `-maf 0.05` when generating the matrix and when performing the linear model fitting.
@@ -269,7 +280,8 @@ bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz > log.txt
 ```
 
 
-<div id='section-id-209'/>
+
+<div id='section-id-231'/>
 
 ## Use a covariate
 A strong peak can hide other peaks. In this case, the potential causative SNP in the peak can be used as covariate and the GWAS can be run again to assess what is the weight of the other SNPs when the covariate SNP weight is removed from the analysis.
@@ -289,7 +301,8 @@ This file can then be used as third argument in run_gwas_gemma.sh such as:
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
 ```
 
-<div id='section-id-227'/>
+
+<div id='section-id-250'/>
 
 # Analysis in R
 
@@ -314,33 +327,39 @@ To know more about the qqman package:
 
 
 
-<div id='section-id-244'/>
+
+<div id='section-id-274'/>
 
 ## User specific modifications
 
-<div id='section-id-246'/>
+
+<div id='section-id-277'/>
 
 ### process_chromatinJ_output.Rmd
 -Indicate path of the ChromatinJ output results files
 -Indicate path to file containing the order of the accessions from the VCF file
 
-<div id='section-id-250'/>
+
+<div id='section-id-282'/>
 
 ### generate_phenotype_file.Rmd (for the output of chromatinJ pipeline)
 -Change the path of the file to import and indicate which phenotype is wanted and which name for this phenotype should be given
 
-<div id='section-id-253'/>
+
+<div id='section-id-286'/>
 
 ### run_gwas_gemma.sh
 -Provide the two arguments (phenotype file and VCF file). Note that the two input files should be located in the same directory.
 
-<div id='section-id-256'/>
+
+<div id='section-id-290'/>
 
 ### gemma_analysis.Rmd
 -Change dir_file and file.name variables
 
 
-<div id='section-id-260'/>
+
+<div id='section-id-295'/>
 
 # Pipeline with ChromatinJ
 If GWAS is to be performed in ChromatinJ output:
@@ -350,12 +369,14 @@ If GWAS is to be performed in ChromatinJ output:
 4. Import in R the output phenotype.assoc.clean.txt file to visualize GWAS results (script gemma_analysis.Rmd)
 
 
-<div id='section-id-268'/>
+
+<div id='section-id-304'/>
 
 # Authors
 * **Johan Zicola** - [johanzi](https://github.com/johanzi)
 
-<div id='section-id-271'/>
+
+<div id='section-id-308'/>
 
 # License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
