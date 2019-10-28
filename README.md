@@ -287,20 +287,40 @@ An example of GWAS plot would look like this:
 
 In this case, no SNP has a p-value above the threshold of -log10(10E-5) (indicated by the blue line). 
 
-![](images/example_manhattan_plot2.png)
+![](images/example_manhattan_plot_basic.png)
 
 In this case, a clear peak is visible in chromosome 4 and 5. The SNPs above the blue line threshold are highlighted in green. The blue line "suggestive line" (-log10(1e-5)) and the red line "genome-wide line" (-log10(5e-8)) are default in qqman and can be removed by setting `suggestiveline=FALSE, genomewideline=FALSE` in the plot command.
 
-I personally use a Bonferroni threshold instead of the 2 default thresholds displayed by the function `manhattan`. I wrote the following R function which generates a QQ-plot of the p-values of each SNP and a Manhattan plot with the options to display the Bonferroni threshold and to highlight specific SNPs. Redirecting the function to a variable will store the SNPs with a significant p-value based on chosen threshold to allow further analysis.(see [GWAS_run.R](GWAS_run.R)).
 
-Usage:
+---
+
+I personally use a Bonferroni threshold instead of the 2 default thresholds displayed by the function `manhattan`. I wrote the following R function [GWAS_run.R](GWAS_run.R) which generates a QQ-plot of the p-values of each SNP and a Manhattan plot with the options to display the Bonferroni threshold and to highlight specific SNPs. Redirecting the function to a variable will store the SNPs with a significant p-value based on chosen threshold to allow further analysis.
+
+**Examples**
+
+Use Bonferroni threshold:
 
 ```{r}
-SNP_significant <- GWAS_run(CpG_whole_genome.assoc.clean.txt, threshold_pvalue = "bonferroni")
+SNP_significant <- GWAS_run(gwas.results, threshold_pvalue = "bonferroni", highlighted_SNP="Chr4_10420088")
 ```
 
-`SNP_significant` contains all SNPs with a p-value below the Bonferroni threshold (chosen as option here).
+![](images/example_manhattan_plot_GWAS_run.png)
 
+I highlight here the SNP `Chr4_10420088` in green. The variable `SNP_significant` is a dataframe containing the SNPs with a p-value lower than the Bonferroni threshold.
+
+---
+
+Use chosen threshold p-value of 5E-08:
+
+```{r}
+SNP_significant <- GWAS_run(path.file, threshold_pvalue = "5E-8", highlighted_SNP="Chr4_10420088")
+```
+
+![](images/example_manhattan_plot_GWAS_run_5E-08.png)
+ 
+
+---
+ 
 To know more about the qqman package:
 
 * https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
