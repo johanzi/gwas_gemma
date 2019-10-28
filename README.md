@@ -297,8 +297,15 @@ To know more about the qqman package:
 * https://cran.r-project.org/web/packages/qqman/qqman.pdf
 * https://github.com/stephenturner/qqman
 
+I personally use a Bonferroni threshold instead of the 2 default threshold of the function `manhattan`. I wrote the following function which generates the qqplot (normality of distribution of the residuals), and a Manhattan plot withthe options to display the Bonferroni threshold and to highlight specific SNPs. (see [GWAS_run.R](GWAS_run.R)). Redirecting the function to a variable will store the SNPs with a significant p-value based on chosen threshold.
 
+Usage:
 
+```{r}
+SNP_significant <- GWAS_run(CpG_whole_genome.assoc.clean.txt, threshold_pvalue = "bonferroni")
+```
+
+`SNP_significant` contains all SNPs with a p-value below the Bonferroni threshold (chosen as option here).
 
 <div id='section-id-274'/>
 
