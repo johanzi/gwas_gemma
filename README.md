@@ -291,13 +291,7 @@ In this case, no SNP has a p-value above the threshold of -log10(10E-5) (indicat
 
 In this case, a clear peak is visible in chromosome 4 and 5. The SNPs above the blue line threshold are highlighted in green. The blue line "suggestive line" (-log10(1e-5)) and the red line "genome-wide line" (-log10(5e-8)) are default in qqman and can be removed by setting `suggestiveline=FALSE, genomewideline=FALSE` in the plot command.
 
-To know more about the qqman package:
-
-* https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
-* https://cran.r-project.org/web/packages/qqman/qqman.pdf
-* https://github.com/stephenturner/qqman
-
-I personally use a Bonferroni threshold instead of the 2 default threshold of the function `manhattan`. I wrote the following function which generates the qqplot (normality of distribution of the residuals), and a Manhattan plot withthe options to display the Bonferroni threshold and to highlight specific SNPs. (see [GWAS_run.R](GWAS_run.R)). Redirecting the function to a variable will store the SNPs with a significant p-value based on chosen threshold.
+I personally use a Bonferroni threshold instead of the 2 default thresholds displayed by the function `manhattan`. I wrote the following R function which generates a QQ-plot of the p-values of each SNP and a Manhattan plot with the options to display the Bonferroni threshold and to highlight specific SNPs. Redirecting the function to a variable will store the SNPs with a significant p-value based on chosen threshold to allow further analysis.(see [GWAS_run.R](GWAS_run.R)).
 
 Usage:
 
@@ -307,6 +301,11 @@ SNP_significant <- GWAS_run(CpG_whole_genome.assoc.clean.txt, threshold_pvalue =
 
 `SNP_significant` contains all SNPs with a p-value below the Bonferroni threshold (chosen as option here).
 
+To know more about the qqman package:
+
+* https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
+* https://cran.r-project.org/web/packages/qqman/qqman.pdf
+* https://github.com/stephenturner/qqman
 <div id='section-id-274'/>
 
 ## User specific modifications
