@@ -181,7 +181,7 @@ Note: remember to convert EOLs from dos to unix format if the phenotype file is 
 <div id='section-id-154'/>
 
 # Pipeline
-Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 1% per default but can be changed to for instance 5% by adding the flag `-maf 0.05` when generating the matrix and when performing the linear model fitting.
+Note that the GEMMA has many options which can be changed directly in [run_gwas_gemma.sh](run_gwas_gemma.sh) if needed. Refer to [GEMMA documentation](http://www.xzlab.org/software/GEMMAmanual.pdf) for more details. In this pipeline, a univariate linear mixed model performing a likelihood ratio test is used (argument `-lmm 2`). Minor allele frequency (MAF) threshold is set to 5% (default is 1%) but can be changed to for instance 10% by adding the flag `-maf 0.1` when generating the matrix and when performing the linear model fitting.
 
 
 1. Generate a dataframe with all the variables and order the accessions so that they match VCF sample order
@@ -189,10 +189,9 @@ Note that the GEMMA has many options which can be changed directly in [run_gwas_
 3. Process the phenotype file with plink and gemma (`run_gwas_gemma.sh`). This step should be run directly into the directory containing the vcf file and the phenotype file.
 4. Import in R the output `phenotype.assoc.clean.txt` file to visualize GWAS results, see [gemma_analysis.Rmd](gemma_analysis.Rmd)
 
-* The part 1, 2, and 4 are done interactively in R (need to be adjusted according to the dataframe used)
-* The part 3 is done in bash through the run_gwas_gemma.sh script. The only variables being the input vcf file used (change path in the script file) and the phenotype file given as first argument in command  line:
-* The part 4 is done interactively in R
-
+* The part 1 and 2 are done according to user pipeline to generate the genotype (R, bash, Python, ...)
+* The part 3 is done in bash through the `run_gwas_gemma.sh` script. The only variables being the phenotype file given as first argument and the input vcf file as second argument (see example below) 
+* The part 4 is done in R
 
 Run the pipeline using bash:
 
