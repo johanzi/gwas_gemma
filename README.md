@@ -108,7 +108,8 @@ Depending on the stringency required, one can choose either of these thresholds.
 
 ```
 vcftools --vcf subset_80_only_chr_biallelic_only_alt.vcf  \
-	--minDP 3 --minGQ 25 --recode --recode-INFO-all --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25
+			--minDP 3 --minGQ 25 --recode --recode-INFO-all \
+			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25
 ```
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
@@ -117,11 +118,10 @@ Note that gemma does not consider SNPs with missingness above a certain threshol
 To remove the sites directly with VCFtools. I noticed that the function `--max-missing` was not removing all the sites with the defined percentage of missing samples. Instead, using `--max-missing-count` seems to work. In that case, 80 samples*0.05=4 so use `--max-missing-count 4`.
 
 ```
-vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25 --max-missing-count 4 --recode --recode-INFO-all --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing
-
+vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25 \
+			--max-missing-count 4 --recode --recode-INFO-all \
+			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing
 ```
-
-
 
 <div id='section-id-83'/>
 
@@ -152,7 +152,6 @@ bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singleto
 ```
 
 
-
 <div id='section-id-126'/>
 
 ### Get list of accessions in vcf file:
@@ -163,10 +162,7 @@ $ cat order_accession.txt
 1001
 1002
 1003
-
 ```
-
-
 
 <div id='section-id-139'/>
 
