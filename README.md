@@ -59,18 +59,15 @@ the phenotype for interest with one value per row, with the same order than for 
 
 **Note: The phenotype file should be in unix format and should not contain empty lines.**
 
-
-
 <div id='section-id-35'/>
 
 ## VCF file preprocessing
-Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for a certain SNP and individual (GT field in VCF).
-
+Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of only 80 accessions is available. The VCF file must then be first subset to these 80 accessions before being used in gemma. The VCF file input for GWAS should not contains indels, singletons, and keep only biallelic positions (non-alternative position can be removed to reduce file size). Also, the calls should be filtered by their quality for every individual, for instance a quality of minimum 25 (GQ>=25) and a coverage of minimum 3 reads (DP>=3) to keep the genotype for an individual (GT field in VCF). If the quality for a sample is not reached, the GT is turned into no data (./.).
 
 <div id='section-id-41'/>
 
 ### Subset the vcf file
-list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows. Note that subsetting is also possible with vcftools but takes about 8x longer. The same is true for other steps, bcftools always perform better.
+list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows. Note that subsetting is possible with vcftools but takes about 8x longer. However, I use vcftools to filter genotype calls on quality and remove singletons as I did not find a simple equivalent command in bcftools (which surely exists).
 
 ```
 bcftools -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
@@ -110,10 +107,20 @@ Two thresholds for coverage (DP) and genotype quality (GQ) are used within the [
 Depending on the stringency required, one can choose either of these thresholds.
 
 ```
-bcftools -V indels -i 'MIN(FMT/DP)>2 & MIN(FMT/GQ)>24' subset_80_only_chr_biallelic_only_alt.vcf > subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
+vcftools --vcf subset_80_only_chr_biallelic_only_alt.vcf  \
+	--minDP 3 --minGQ 25 --recode --recode-INFO-all --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25
 ```
 
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
+
+
+To remove the sites directly with VCFtools. I noticed that the function `--max-missing` was not removing all the sites with the defined percentage of missing samples. Instead, using `--max-missing-count` seems to work. In that case, 80 samples*0.05=4 so use `--max-missing-count 4`.
+
+```
+vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25 --max-missing-count 4 --recode --recode-INFO-all --out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing
+
+```
+
 
 
 <div id='section-id-83'/>
@@ -123,15 +130,15 @@ Note that gemma does not consider SNPs with missingness above a certain threshol
 Generates out.singletons (positions of all singletons)
 
 ```
-vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf
+vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing.recode.vcf
 ```
 
 Exclude singleton positions 
 
 ```
-vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
+vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing.recode.vcf \
 			--exclude-positions out.singletons --recode --recode-INFO-all \
-			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons
+			--out subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons
 ```
 
 
@@ -140,8 +147,8 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25.vcf \
 ### Compress and tabix the file
 
 ```
-bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf && \
-			tabix subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf.gz 
+bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf && \
+			tabix subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf.gz 
 ```
 
 
@@ -151,7 +158,7 @@ bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf &
 ### Get list of accessions in vcf file:
 
 ```
-$ bcftool query -l  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_no_singletons.recode.vcf.gz > order_accession.txt
+$ bcftool query -l  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf.gz > order_accession.txt
 $ cat order_accession.txt
 1001
 1002
