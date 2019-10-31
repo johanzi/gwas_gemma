@@ -127,7 +127,9 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25 \
 
 ### Remove singletons
 
-Generates out.singletons (positions of all singletons)
+Note that gemma is removing SNP under a certain allele frequency (for example 5%). Therefore, this step is optional as the singletons would be filtered in gemma.
+
+Generates `out.singletons` (positions of all singletons)
 
 ```
 vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing.recode.vcf
@@ -147,8 +149,8 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing.rec
 ### Compress and tabix the file
 
 ```
-bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf && \
-			tabix subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf.gz 
+bgzip  subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf
+tabix subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing_no_singletons.recode.vcf.gz 
 ```
 
 
@@ -248,19 +250,16 @@ Total time of the run: 13 seconds
 
 ```
 
-
 More details about the run is also displayed as standard output when running `run_gwas_gemma.sh` and can be redirected to a log file if needed.
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz > log.txt
 ```
 
-
-
 <div id='section-id-231'/>
 
 ## Use a covariate
 A strong peak can hide other peaks. In this case, the potential causative SNP in the peak can be used as covariate and the GWAS can be run again to assess what is the weight of the other SNPs when the covariate SNP weight is removed from the analysis.
-To do so one needs to generate a file with 2 columns, the first containings 1s and the second a code for the SNP to use as covariate. For example, if the SNP can be coded as 1 and the reference allele as 0, therefore, a set of 4 accessions were only the 2 first accessions have the SNP would yield a covariate file looking like this:
+To do so one needs to generate a file with 2 columns, the first containing 1s and the second a code for the SNP to use as covariate. For example, if the SNP can be coded as 1 and the reference allele as 0, therefore, a set of 4 accessions were only the 2 first accessions have the SNP would yield a covariate file looking like this:
 
 ```
 $ cat covariate_file.txt
@@ -270,7 +269,7 @@ $ cat covariate_file.txt
 1	0
 ```
 
-This file can then be used as third argument in run_gwas_gemma.sh such as:
+This file can then be used as third argument in `run_gwas_gemma.sh` such as:
 
 ```
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
