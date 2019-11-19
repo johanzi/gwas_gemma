@@ -132,7 +132,7 @@ Note that gemma is removing SNP under a certain allele frequency (for example 5%
 Generates `out.singletons` (positions of all singletons)
 
 ```
-vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_remove_missing.recode.vcf
+vcftools --singletons --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_wo_indels_remove_missing.recode.vcf
 ```
 
 Exclude singleton positions 
