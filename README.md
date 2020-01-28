@@ -333,7 +333,7 @@ NB: When PLINK is generating the bed, bim, and fam files, it considers the refer
 
 ### Include several covariates
 
-One can add several covariates in the `covariate_file.txt`, as long as the first column is made of 1s. The beta estimate will then include one intercept and a coefficient for each covariate (in the same order as indicated in the `covariate_file.txt` and with the same caveat concerning the definition of the reference allele (see above).
+One can add several covariates in the `covariate_file.txt`, as long as the first column is made of 1s. The beta estimate will then include one intercept and a coefficient for each covariate in the same order as indicated in the `covariate_file.txt` and with the same caveat concerning the definition of the reference allele (see above).
 
 
 <div id='section-id-250'/>
