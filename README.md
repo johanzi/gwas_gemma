@@ -275,6 +275,61 @@ This file can then be used as third argument in `run_gwas_gemma.sh` such as:
 bash run_gwas_gemma.sh phenotype.tsv vcf_file.vcf.gz covariate_file.txt
 ```
 
+### Estimate the effect of a SNP
+
+The covariate analysis allows to assess the weight of the SNP set as covariate. To do so, compare the output in the log files with and without the covariate. One can estimate the weight of the SNP set as covariate by subtracting the PVE (phenotypic variance explained in %) values of the analysis without and with the covariate.
+
+For instance:
+
+Analysis without covariate
+
+```
+## Summary Statistics:
+## number of total individuals = 83
+## number of analyzed individuals = 83
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs = 954216
+## number of analyzed SNPs = 10321
+## REMLE log-likelihood in the null model = -175.057
+## MLE log-likelihood in the null model = -175.918
+## pve estimate in the null model = 0.942693
+## se(pve) in the null model = 0.0201995
+## vg estimate in the null model = 38.6983
+## ve estimate in the null model = 0.906486
+## beta estimate in the null model =   8.3849
+## se(beta) =   0.104506
+
+```  
+
+Analysis with covariate
+
+```
+## Summary Statistics:
+## number of total individuals = 83
+## number of analyzed individuals = 83
+## number of covariates = 2
+## number of phenotypes = 1
+## number of total SNPs = 954216
+## number of analyzed SNPs = 10315
+## REMLE log-likelihood in the null model = -121.042
+## MLE log-likelihood in the null model = -123.252
+## pve estimate in the null model = 0.193322
+## se(pve) in the null model = 0.165238
+## vg estimate in the null model = 0.622643
+## ve estimate in the null model = 1.00113
+## beta estimate in the null model =   11.1001  -8.34676
+## se(beta) =   0.157083  0.345247
+
+```
+
+The PVE explained by the SNP set as covariate is 0.942693 - 0.193322 = 0.749371 (75%). The SNP as therefore a large effect on the phenotype.
+
+One can also estimate directly the effect of the SNP set as covariate by looking at the beta estimate given in the log file of the analysis with covariate. Here `beta estimate in the null model =   11.1001  -8.346761` indicates that the alternative allele of my SNP set as covariate reduce my phenotype by -8.34676 (in phenotype unit)
+
+
+NB: When PLINK is generating the bed, bim, and fam files, it considers the reference allele of each variant as the allele with the highest frequency. This can change the interpretation of the beta in the log file from an analysis using a covariate. The beta gives an intercept and a slop value. For instance, in the example above, the value `-8.34` would have actually been `8.34` if my SNP alternative allele had a frequency > 50% in the individuals analyzed. In case of doubt, plot your phenotype by allele and you will clearly see the direction of your phenotype.
+
 
 <div id='section-id-250'/>
 
