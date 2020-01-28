@@ -331,6 +331,11 @@ One can also estimate directly the effect of the SNP set as covariate by looking
 NB: When PLINK is generating the bed, bim, and fam files, it considers the reference allele of each variant as the allele with the highest frequency. This can change the interpretation of the beta in the log file from an analysis using a covariate. The beta gives an intercept and a slop value. For instance, in the example above, the value `-8.34` would have actually been `8.34` if my SNP alternative allele had a frequency > 50% in the individuals analyzed. In case of doubt, plot your phenotype by allele and you will clearly see the direction of your phenotype.
 
 
+### Include several covariates
+
+One can add several covariates in the `covariate_file.txt`, as long as the first column is made of 1s. The beta estimate will then include one intercept and a coefficient for each covariate (in the same order as indicated in the `covariate_file.txt` and with the same caveat concerning the definition of the reference allele (see above).
+
+
 <div id='section-id-250'/>
 
 # Analysis in R
