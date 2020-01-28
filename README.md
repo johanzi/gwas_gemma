@@ -323,9 +323,9 @@ Analysis with covariate
 
 ```
 
-The PVE explained by the SNP set as covariate is 0.942693 - 0.193322 = 0.749371 (75%). The SNP as therefore a large effect on the phenotype.
+The PVE explained by the SNP set as covariate is 0.942693 - 0.193322 = 0.749371 (75%). The SNP has therefore a large effect on the phenotype.
 
-One can also estimate directly the effect of the SNP set as covariate by looking at the beta estimate given in the log file of the analysis with covariate. Here `beta estimate in the null model =   11.1001  -8.346761` indicates that the alternative allele of my SNP set as covariate reduce my phenotype by -8.34676 (in phenotype unit)
+One can also estimate directly the effect of the SNP set as covariate by looking at the beta estimate given in the log file of the analysis with covariate. Here `beta estimate in the null model =   11.1001  -8.346761` indicates that the alternative allele of my SNP set as covariate reduce my phenotype by -8.34676 (in phenotype unit).
 
 
 NB: When PLINK is generating the bed, bim, and fam files, it considers the reference allele of each variant as the allele with the highest frequency. This can change the interpretation of the beta in the log file from an analysis using a covariate. The beta gives an intercept and a slop value. For instance, in the example above, the value `-8.34` would have actually been `8.34` if my SNP alternative allele had a frequency > 50% in the individuals analyzed. In case of doubt, plot your phenotype by allele and you will clearly see the direction of your phenotype.
