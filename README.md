@@ -57,7 +57,10 @@ This pipeline was developed on a GNU/Linux system. It should theoretically work 
 as described in the vcf file. Alternatively, one can process directly a tsv file containing
 the phenotype for interest with one value per row, with the same order than for the VCF file (no header)
 
-**Note: The phenotype file should be in unix format and should not contain empty lines.**
+**Note 1: The phenotype file should be in unix format and should not contain empty lines.**
+
+**Note 2: If the chromosome names contain characters, plink will replace them by 0. This should not matter if no SNP information is provided in the 3rd column of the VCF file (only dots). Otherwise, the chromosome information will be lost and no Manhattan plot can be plotted. To avoid this, either check that the chromosome names in your VCF file are only integers. Otherwise, check that the third column of your VCF file contains only dots (.).**
+
 
 <div id='section-id-35'/>
 
