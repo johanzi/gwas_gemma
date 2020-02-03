@@ -70,7 +70,7 @@ Consider a VCF file containing 100 *Arabidopsis thaliana*, but the phenotype of 
 list file `list_accessions_to_keep.txt` contains the ID of each accession on separate rows. Note that subsetting is possible with vcftools but takes about 8x longer. However, I use vcftools to filter genotype calls on quality and remove singletons as I did not find a simple equivalent command in bcftools (which surely exists).
 
 ```
-bcftools -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
+bcftools view -S list_accessions_to_keep.txt file.vcf.gz > subset_80.vcf
 ```
 
 The output file will be `subset_80.vcf`
