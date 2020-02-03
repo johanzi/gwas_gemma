@@ -60,9 +60,9 @@ def main():
             # Nothing to do if the chromosome is already a digit
             if is_digit(CHR):
                 CHR = CHR            
-            # Remove "Chr" prefix if present and check if suffix is a digit
-            elif CHR[0:3] == "Chr" and is_digit(CHR[3::]):
-                CHR = CHR.replace("Chr","")
+            # Remove "Chr or chr" prefix if present and check if suffix is a digit
+            elif CHR[0:3].lower == "chr" and is_digit(CHR[3::]):
+                CHR = CHR.lower().replace("chr","")
             # Skip the line if CHR is something else than e.g. 
             # a digit or "Chr" + digit
             else:
