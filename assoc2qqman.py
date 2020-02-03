@@ -20,7 +20,6 @@ import re
 '''
 
 
-
 # Function to test whether the string following "Chr" 
 # in the chromosome name is a digit or not. This allow
 # to discard lines with ChrM or ChrC for instance
@@ -51,12 +50,21 @@ def main():
             print(header)
         else:
             line = line.strip().split("\t")  # Get rid of EOL and Create a list based on \t separation
-            SNP = line[1].replace(":","_")  # Second column but replace column by underscore
-            CHR = line[1].split(":")[0] # Get the chromosome ID
-            # Note that the CHR field should be numeric for plotting R 
-            # manhattan package. Therefore, prefix "Chr" should be removed and organelles
-            # with string names should be skipped
             
+            # In case the chromosome names contains letters and that the VCF third column is empty (dots)
+            # GEMMA will as second column (rs) the chromosome name and the position (e.g. Chr1:501226). The first
+            # column (chr) will contain only 0s.
+
+            if line[0] == 0:          
+                SNP = line[2].replace(":","_")  # Second column but replace column by underscore
+                CHR = line[1].split(":")[0] # Get the chromosome ID
+                # Note that the CHR field should be numeric for plotting R 
+                # manhattan package. Therefore, prefix "Chr" should be removed and organelles
+                # with string names should be skipped
+            else:
+                SNP = line[1]
+                CHR = line[0]
+
             # Nothing to do if the chromosome is already a digit
             if is_digit(CHR):
                 CHR = CHR            
@@ -68,7 +76,7 @@ def main():
             else:
                continue
         
-            # Get the information for the other fields
+            # Get the information for the other fields (note that it works when GEMMA option -lmm 2 is set)
             BP = line[2]
             P = line[8]
             zscore = line[7]
