@@ -55,27 +55,20 @@ def main():
             # GEMMA will as second column (rs) the chromosome name and the position (e.g. Chr1:501226). The first
             # column (chr) will contain only 0s.
 
-            if line[0] == 0:          
-                SNP = line[2].replace(":","_")  # Second column but replace column by underscore
-                CHR = line[1].split(":")[0] # Get the chromosome ID
-                # Note that the CHR field should be numeric for plotting R 
-                # manhattan package. Therefore, prefix "Chr" should be removed and organelles
-                # with string names should be skipped
-            else:
-                SNP = line[1]
-                CHR = line[0]
+            if line[0] == "0":
+                SNP = line[1].replace(":","_") # Second column but replace column by underscore
 
-            # Nothing to do if the chromosome is already a digit
-            if is_digit(CHR):
-                CHR = CHR            
-            # Remove "Chr or chr" prefix if present and check if suffix is a digit
-            elif CHR[0:3].lower == "chr" and is_digit(CHR[3::]):
-                CHR = CHR.lower().replace("chr","")
-            # Skip the line if CHR is something else than e.g. 
-            # a digit or "Chr" + digit
-            else:
-               continue
-        
+                # Since the first column is 0, it means that the chromosome is not a 
+                # digit (contains a suffix)
+                CHR = line[1].split(":")[0]
+                
+                if CHR[0:3].lower() == "chr" and is_digit(CHR[3::]):
+                    CHR = CHR.lower().replace("chr","")
+            else:            
+            # If the chromosome is a digit
+                CHR = line[0]
+                SNP = line[1]
+                
             # Get the information for the other fields (note that it works when GEMMA option -lmm 2 is set)
             BP = line[2]
             P = line[8]
