@@ -1,14 +1,14 @@
 GWAS_run <- function(output_gemma, threshold_pvalue="0", highlighted_SNP=""){
   
   # Highlighted_SNP allows to display in green the SNP of interested on the Manahattan plot
-  # It can be 1 SNP (e.g. highlighted_SNP="Chr4_10420088") or several SNPs, passed as a vector
-  # (e.g. highlighted_SNP=c("Chr4_10420088","Chr5_112000"). No SNP highlighted by default
+  # It can be 1 SNP (e.g. highlighted_SNP="4:10420088") or several SNPs, passed as a vector
+  # (e.g. highlighted_SNP=c("4:10420088","5:112000"). No SNP highlighted by default
   
   # Import GEMMA output file
   gwas.results <- read.delim(path.file, sep="\t")
   
   # Plot QQ plot (need to precise the package as lattice has a similar function
-  qqman::qq(gwas.results$P, main=file.name)
+  #qqman::qq(gwas.results$P, main=file.name)
   
   # One can select SNPs above the Bonferroni corrected p-value threshold
   # by using the argument "bonferroni"
@@ -43,3 +43,5 @@ GWAS_run <- function(output_gemma, threshold_pvalue="0", highlighted_SNP=""){
     return(gwas_significant)
   }
 }
+
+
