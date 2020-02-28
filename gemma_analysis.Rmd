@@ -33,6 +33,16 @@ library(ggplot2)
 
 ```
 
+# Function to plot Manhattan plot
+
+The function "GWAS_run.R" modifies the original 'manhattan' function of qqman package by generating
+a Bonferroni threshold (5% alpha risk / nb of SNPs analyzed). It will also retrieve
+all SNPs above this threshold as output of the function
+
+```{r}
+source("GWAS_run.R")
+
+```
 
 
 ###Load output from Gemma
@@ -54,48 +64,25 @@ gwas.results <- read.delim(path.file, sep="\t")
 qq(gwas.results$P, main=file.name)
 ```
 
-
 ```{r echo=FALSE}
 plot(-log(gwas.results$P)~gwas.results$CHR, main=file.name)
 ```
+
 ```{r echo=FALSE}
 hist(-log(gwas.results$P), main=file.name)
 ```
-
 
 ### Number of SNP per chromosome
 ```{r echo=FALSE}
 as.data.frame(table(gwas.results$CHR))
 ```
 
-
-
-```{r echo=FALSE}
-
-# Get positions of the chromosome with SNPs having a -log(P) > 5
-
-threshold <-  (10^-5)
-
-gwas_significant <- subset(gwas.results, P < threshold)
-
-# Get a vector of the SNPs with significant value
-SNP_significant <- as.vector(gwas_significant$SNP)
-
-```
-
-
-
 ### Manhattan plot
 
-```{r echo=FALSE}
-manhattan(gwas.results, highlight=SNP_significant, main=file.name)
-```
+Get a vector of the SNPs with significant value and display the Manhattan plot with bonferroni
+ threshold and the SNP "1:24018" highlighted in green
 
 ```{r echo=FALSE}
-#Check if dataframe is not empty (no SNPs above threshold value
-if(dim(gwas_significant)[[1]] != 0){ 
-  gwas_significant
-}
-
+SNP_significant <- GWAS_run(path.file, threshold_pvalue = "bonferroni", highlighted_SNP="1:24018")
 ```
 
