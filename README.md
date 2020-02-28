@@ -375,7 +375,7 @@ I highlight here the SNP `4:10420088` in green. The variable `SNP_significant` i
 Use chosen threshold p-value of 5E-08:
 
 ```{r}
-SNP_significant <- GWAS_run(path.file, threshold_pvalue = "5E-8", highlighted_SNP="Chr4:10420088")
+SNP_significant <- GWAS_run(path.file, threshold_pvalue = "5E-8", highlighted_SNP="4:10420088")
 ```
 
 ![](images/example_manhattan_plot_GWAS_run_5E-08.png)
