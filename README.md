@@ -15,7 +15,8 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
     - [Keep alternative and biallelic positions only](#section-id-60)
     - [Remove indels and hide GT of individuals with low quality call](#section-id-68)
     - [Remove singletons](#section-id-83)
-    - [Compress and tabix the file](#section-id-117)
+    - [Rename chromosomes](#section-id-117)
+    - [Compress and tabix the file](#section-id-118)
     - [Get list of accessions in vcf file:](#section-id-126)
   - [Phenotype file](#section-id-139)
 - [Pipeline](#section-id-154)
@@ -58,8 +59,6 @@ as described in the vcf file. Alternatively, one can process directly a tsv file
 the phenotype for interest with one value per row, with the same order than for the VCF file (no header)
 
 **Note 1: The phenotype file should be in unix format and should not contain empty lines.**
-
-**Note 2: If the chromosome names contain characters, plink will replace them by 0. This should not matter if no SNP information is provided in the 3rd column of the VCF file (only dots). Otherwise, the chromosome information will be lost and no Manhattan plot can be plotted. To avoid this, either check that the chromosome names in your VCF file are only integers. Otherwise, check that the third column of your VCF file contains only dots (.).**
 
 
 <div id='section-id-35'/>
@@ -118,7 +117,7 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt.vcf  \
 Note that gemma does not consider SNPs with missingness above a certain threshold (default 5%). Therefore, if in this case one SNP has less than 4 GT values (5% of 80 samples) following the filtering for DP>=3 and GQ>=25, the SNP will be ignored. Alternatively, genotypes can be imputed using BIMBAM (Plink is used in this genotype). Refer to gemma [documentation]((http://www.xzlab.org/software/GEMMAmanual.pdf)).
 
 
-To remove the sites directly with VCFtools. I noticed that the function `--max-missing` was not removing all the sites with the defined percentage of missing samples. Instead, using `--max-missing-count` seems to work. In that case, 80 samples*0.05=4 so use `--max-missing-count 4`.
+To remove the sites directly with VCFtools. I noticed that the function `--max-missing` was not removing all the sites with the defined percentage of missing samples. Instead, using `--max-missing-count` seems to work. In that case, 80 samples\*0.05=4 so use `--max-missing-count 4`.
 
 ```
 vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_wo_indels.recode.vcf \
@@ -148,6 +147,19 @@ vcftools --vcf subset_80_only_chr_biallelic_only_alt_DP3_GQ25_wo_indels_remove_m
 
 
 <div id='section-id-117'/>
+
+### Rename chromosomes
+
+If the chromosome names contain characters, plink will replace them by 0. If no SNP information is provided in the 3rd column of the VCF file (only dots), the default SNP name (column 'rs' in gemma output) of chromosome:position (e.g. Chr5:1500020) will be used, otherwise, the chromosome information will be lost and no Manhattan plot can be plotted. To avoid this, check that the chromosome names in your VCF file are integers.
+
+For instance, if the chromosome nomenclature is ChrX:
+
+```
+sed -i 's/^Chr//g' subset_80_only_chr_biallelic_only_alt_DP3_GQ25_wo_indels_remove_missing_no_singletons.recode.vcf
+```
+
+
+<div id='section-id-118'/>
 
 ### Compress and tabix the file
 
