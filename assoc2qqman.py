@@ -13,9 +13,7 @@ import re
     from the association analysis command and performs 
     readjustment of the file to be compatible for Read
     R analysis with the package 'qqman'. Note that chromosomes
-    should either be named as digits or digits with prefix "Chr"
-    as e.g Chr3. All other nomenclatures will be removed from the
-    output file.
+    should named as digits.
     Compatible Python27 and Python37
 '''
 
@@ -51,25 +49,13 @@ def main():
         else:
             line = line.strip().split("\t")  # Get rid of EOL and Create a list based on \t separation
             
-            # In case the chromosome names contains letters and that the VCF third column is empty (dots)
-            # GEMMA will as second column (rs) the chromosome name and the position (e.g. Chr1:501226). The first
-            # column (chr) will contain only 0s.
-
-            if line[0] == "0":
-                SNP = line[1].replace(":","_") # Second column but replace column by underscore
-
-                # Since the first column is 0, it means that the chromosome is not a 
-                # digit (contains a suffix)
-                CHR = line[1].split(":")[0]
+            # Get chromosome name (should be a digit) and the name of the SNP
+            # on the chromosome
+            CHR = line[0]
+            SNP = line[1]
                 
-                if CHR[0:3].lower() == "chr" and is_digit(CHR[3::]):
-                    CHR = CHR.lower().replace("chr","")
-            else:            
-            # If the chromosome is a digit
-                CHR = line[0]
-                SNP = line[1]
-                
-            # Get the information for the other fields (note that it works when GEMMA option -lmm 2 is set)
+            # Get the information for the other fields 
+            # (note that it works when GEMMA option -lmm 2 is set)
             BP = line[2]
             P = line[8]
             zscore = line[7]
