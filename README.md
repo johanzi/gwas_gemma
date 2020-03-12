@@ -390,7 +390,7 @@ To know more about the qqman package:
 
 <div id='section-id-274'/>
 
-## User specific modifications
+# User specific modifications
 
 **run_gwas_gemma.sh**
 
