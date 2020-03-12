@@ -22,7 +22,7 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
 - [Pipeline](#section-id-154)
   - [Use a covariate](#section-id-231)
 - [Analysis in R](#section-id-250)
-  - [User specific modifications](#section-id-274)
+- [User specific modifications](#section-id-274)
 - [Authors](#section-id-304)
 - [License](#section-id-308)
  
