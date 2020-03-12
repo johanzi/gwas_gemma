@@ -23,8 +23,6 @@ Simplified pipeline that requires from the user a VCF file with the samples of i
   - [Use a covariate](#section-id-231)
 - [Analysis in R](#section-id-250)
   - [User specific modifications](#section-id-274)
-    - [run_gwas_gemma.sh](#section-id-286)
-    - [gemma_analysis.Rmd](#section-id-290)
 - [Authors](#section-id-304)
 - [License](#section-id-308)
  
@@ -388,20 +386,19 @@ To know more about the qqman package:
 * https://www.biorxiv.org/content/early/2014/05/14/005165.full.pdf+html
 * https://cran.r-project.org/web/packages/qqman/qqman.pdf
 * https://github.com/stephenturner/qqman
-<div id='section-id-274'/>
 
+
+<div id='section-id-274'/>
 
 ## User specific modifications
 
+**run_gwas_gemma.sh**
 
-<div id='section-id-286'/>
-### run_gwas_gemma.sh
 -Provide the two arguments (phenotype file and VCF file). Note that the two input files should be located in the same directory.
 
 
-<div id='section-id-290'/>
+**gemma_analysis.Rmd**
 
-### gemma_analysis.Rmd
 -Change dir_file and file.name variables
 
 <div id='section-id-304'/>
