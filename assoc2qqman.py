@@ -52,8 +52,20 @@ def main():
             # Get chromosome name (should be a digit) and the name of the SNP
             # on the chromosome
             CHR = line[0]
+            
             SNP = line[1]
-                
+            
+            # If CHR=0, it means the chromosome names in the VCF file are not pure digit
+            # then, retrieve chromosome name from the SNP field and remove all non digits
+            if int(CHR) == 0:
+                CHR = re.split(':', SNP)[0] 
+                CHR = re.sub("[^0-9]", "", CHR)
+            
+
+            # Skip the SNP if the CHR is not a digit)
+            if not is_digit(CHR):
+                continue
+
             # Get the information for the other fields 
             # (note that it works when GEMMA option -lmm 2 is set)
             BP = line[2]
