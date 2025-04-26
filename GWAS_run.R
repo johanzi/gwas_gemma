@@ -1,4 +1,6 @@
 GWAS_run <- function(output_gemma, threshold_pvalue="0", highlighted_SNP=""){
+
+  require(qqman)
   
   # Highlighted_SNP allows to display in green the SNP of interested on the Manahattan plot
   # It can be 1 SNP (e.g. highlighted_SNP="4:10420088") or several SNPs, passed as a vector
