@@ -47,7 +47,7 @@ GWAS_run <- function(output_gemma, threshold_pvalue="0", highlighted_SNP=""){
 }
 
 SNP_to_BED <- function(gwas_significant, output_name){
-  SNP_sig_bed <- gwas_significant %>% select(CHR, BP, BP, SNP)
+  SNP_sig_bed <- gwas_significant %>% select(CHR, BP, SNP)
   SNP_sig_bed$SNP <- sub(":","_", SNP_sig_bed$SNP)
   SNP_sig_bed$CHR <- sub("^","chr", SNP_sig_bed$CHR)
   SNP_sig_bed$END <- SNP_sig_bed$BP
